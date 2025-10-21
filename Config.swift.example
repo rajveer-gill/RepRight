@@ -1,0 +1,26 @@
+import Foundation
+
+struct Config {
+    // IMPORTANT: This is an EXAMPLE file!
+    // 
+    // TO SET UP:
+    // 1. Copy this file to: FitFormAI/FitFormAI/Config.swift
+    // 2. Add your actual OpenAI API key below
+    // 3. The .gitignore will prevent Config.swift from being committed
+    //
+    // Get your API key from: https://platform.openai.com/api-keys
+    
+    static let openAIAPIKey = "YOUR_OPENAI_API_KEY_HERE"
+    
+    static func getAPIKey() -> String {
+        // First, try to get from Info.plist (if you prefer that method)
+        if let key = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") as? String,
+           !key.isEmpty && key != "YOUR_OPENAI_API_KEY_HERE" {
+            return key
+        }
+        
+        // Fall back to the hardcoded value
+        return openAIAPIKey
+    }
+}
+
