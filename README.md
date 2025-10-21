@@ -1,4 +1,4 @@
-# FitForm AI - Your AI-Powered Personal Trainer 💪
+# RepRight - Your AI-Powered Personal Trainer 💪
 
 <div align="center">
 
