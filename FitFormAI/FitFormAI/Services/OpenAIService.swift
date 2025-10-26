@@ -377,6 +377,151 @@ class OpenAIService {
         )
     }
     
+    // MARK: - Workout Customization
+    
+    func customizeWorkoutPlan(_ request: CustomizationRequest) async throws -> CustomizationResponse {
+        let prompt = buildCustomizationPrompt(request: request)
+        
+        let requestBody: [String: Any] = [
+            "model": "gpt-4o",
+            "messages": [
+                ["role": "system", "content": "You are an expert fitness trainer and exercise physiologist. When users request workout plan changes, you must:\n1. Evaluate if the change is harmful to their development\n2. If harmful, provide a clear warning and explanation\n3. If safe, create a modified plan\n4. Always respond in valid JSON format."],
+                ["role": "user", "content": prompt]
+            ],
+            "temperature": 0.7,
+            "response_format": ["type": "json_object"]
+        ]
+        
+        let response = try await makeAPIRequest(endpoint: "/chat/completions", body: requestBody)
+        return try parseCustomizationResponse(response)
+    }
+    
+    private func buildCustomizationPrompt(request: CustomizationRequest) -> String {
+        let exercisesList = request.currentPlan.workouts.flatMap { $0.exercises.map { $0.name } }.joined(separator: ", ")
+        let workoutTitles = request.currentPlan.workouts.map { "\($0.day): \($0.title)" }.joined(separator: ", ")
+        
+        return """
+        Current Workout Plan:
+        - Title: \(request.currentPlan.title)
+        - Duration: \(request.currentPlan.durationWeeks) weeks
+        - Number of workouts: \(request.currentPlan.workouts.count)
+        - Workout Schedule: \(workoutTitles)
+        - Exercises: \(exercisesList)
+        
+        User's Customization Request: "\(request.request)"
+        
+        IMPORTANT: When modifying the plan:
+        - Keep the same workout structure and day/title labels (e.g., "Upper Body", "Lower Body", "Push Day", "Pull Day", "Leg Day")
+        - Only change the specific exercises requested
+        - Maintain the same workout focus unless the request explicitly changes it
+        
+        Analyze this request and respond in JSON format:
+        {
+            "isHarmful": boolean (true if the change is bad for their development, false if it's safe),
+            "warningMessage": "string or null" (explain why it's harmful if isHarmful is true),
+            "modifiedPlan": { 
+                "title": "string",
+                "description": "string",
+                "durationWeeks": number,
+                "workouts": [array of workout objects with same structure as original]
+            } or null,
+            "explanation": "string" (explain what you changed and why, or why you refused)
+        }
+        
+        CRITICAL: The modifiedPlan MUST include the "workouts" array with ALL workout days, even if you're only changing exercises. DO NOT create an empty plan.
+        
+        IMPORTANT SAFETY RULES:
+        - If they try to remove compound exercises (squats, deadlifts, bench press) for muscle groups that need them, mark as harmful
+        - If they want to add dangerous exercises, mark as harmful
+        - If they want to do extreme volume that could cause injury, mark as harmful
+        - Push-pull-legs split, removing leg press, adding more cardio = SAFE
+        - Removing squats entirely for leg days = HARMFUL
+        - If not harmful, provide the complete modified workout plan in the same JSON format as the original
+        
+        CRITICAL: The "modifiedPlan" must be a complete, valid workout plan JSON object with the EXACT same structure as the original plan. Include ALL fields: title, description, durationWeeks, and all workouts with all their exercises (name, sets, reps, restTime, notes, muscleGroups, difficulty).
+        
+        IMPORTANT: When creating modified workouts, preserve meaningful "day" and "title" fields (e.g., "Upper Body", "Lower Body", "Push Day", "Pull Day", "Leg Day") - DO NOT use generic "Workout" labels.
+        """
+    }
+    
+    private func parseCustomizationResponse(_ response: [String: Any]) throws -> CustomizationResponse {
+        guard let choices = response["choices"] as? [[String: Any]],
+              let firstChoice = choices.first,
+              let message = firstChoice["message"] as? [String: Any],
+              let content = message["content"] as? String else {
+            print("❌ Failed to extract content from API response")
+            throw APIError.invalidResponse
+        }
+        
+        let jsonData = content.data(using: .utf8)
+        guard let data = jsonData,
+              let responseData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            print("❌ Failed to parse JSON from AI response")
+            print("Content: \(content)")
+            throw APIError.invalidResponse
+        }
+        
+        let isHarmful = responseData["isHarmful"] as? Bool ?? false
+        let warningMessage = responseData["warningMessage"] as? String
+        let explanation = responseData["explanation"] as? String ?? "Customization processed"
+        
+        print("✅ isHarmful: \(isHarmful)")
+        print("✅ hasModifiedPlan: \(responseData["modifiedPlan"] != nil)")
+        
+        var modifiedPlan: WorkoutPlan? = nil
+        if let planData = responseData["modifiedPlan"] as? [String: Any] {
+            do {
+                print("📋 Attempting to parse modified plan...")
+                modifiedPlan = try parseWorkoutPlanFromDict(planData)
+                print("✅ Successfully parsed modified plan!")
+                print("📊 Plan has \(modifiedPlan?.workouts.count ?? 0) workouts")
+                print("📝 Plan title: \(modifiedPlan?.title ?? "nil")")
+            } catch {
+                print("❌ Error parsing modified plan: \(error)")
+                print("Plan data keys: \(planData.keys)")
+            }
+        } else {
+            print("⚠️ No modifiedPlan in response")
+        }
+        
+        return CustomizationResponse(
+            isHarmful: isHarmful,
+            warningMessage: warningMessage,
+            modifiedPlan: modifiedPlan,
+            explanation: explanation
+        )
+    }
+    
+    private func parseWorkoutPlanFromDict(_ data: [String: Any]) throws -> WorkoutPlan {
+        let title = data["title"] as? String ?? "Your Workout Plan"
+        let description = data["description"] as? String ?? ""
+        let durationWeeks = data["durationWeeks"] as? Int ?? 4
+        
+        print("🔍 Parsing workout plan from dict:")
+        print("   Title: \(title)")
+        print("   Description: \(description)")
+        print("   Duration: \(durationWeeks) weeks")
+        print("   Available keys in data: \(data.keys)")
+        
+        var workouts: [Workout] = []
+        if let workoutsData = data["workouts"] as? [[String: Any]] {
+            print("   Found \(workoutsData.count) workouts in data")
+            for (index, workoutData) in workoutsData.enumerated() {
+                print("   Parsing workout \(index + 1)...")
+                let workout = try parseWorkout(workoutData)
+                print("   ✅ Workout \(index + 1): \(workout.day) - \(workout.title) (\(workout.exercises.count) exercises)")
+                workouts.append(workout)
+            }
+        } else {
+            print("   ⚠️ No workouts array found in data!")
+            print("   Data contents: \(data)")
+        }
+        
+        print("   Final plan has \(workouts.count) workouts")
+        
+        return WorkoutPlan(title: title, description: description, durationWeeks: durationWeeks, workouts: workouts)
+    }
+    
     private func selectKeyFrames(from frames: [UIImage], count: Int) -> [UIImage] {
         guard frames.count > count else { return frames }
         

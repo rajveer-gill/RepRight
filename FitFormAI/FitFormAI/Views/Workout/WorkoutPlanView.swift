@@ -5,6 +5,7 @@ struct WorkoutPlanView: View {
     @State private var isGenerating = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var showCustomization = false
     
     var body: some View {
         ScrollView {
@@ -79,6 +80,27 @@ struct WorkoutPlanView: View {
                         )
                         .padding(.horizontal, 24)
                         
+                        // Customize Plan Button
+                        Button(action: { showCustomization = true }) {
+                            HStack {
+                                Image(systemName: "slider.horizontal.3")
+                                Text("Customize This Plan")
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [.green, .blue],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(16)
+                        }
+                        .padding(.horizontal, 24)
+                        
                         // Workouts List
                         Text("Weekly Schedule")
                             .font(.title2.bold())
@@ -99,6 +121,17 @@ struct WorkoutPlanView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .sheet(isPresented: $showCustomization) {
+            if let plan = appState.currentWorkoutPlan {
+                WorkoutCustomizationView(
+                    plan: plan,
+                    onPlanUpdated: { newPlan in
+                        appState.currentWorkoutPlan = newPlan
+                        showCustomization = false
+                    }
+                )
+            }
         }
     }
     
@@ -218,9 +251,36 @@ struct ExerciseRow: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(exercise.name)
-                .font(.subheadline.bold())
-                .foregroundColor(.white)
+            HStack {
+                Text(exercise.name)
+                    .font(.subheadline.bold())
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                // YouTube Tutorial Button
+                if let url = exercise.youtubeSearchURL {
+                    Link(destination: url) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "play.rectangle.fill")
+                            Text("Watch")
+                        }
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color.white.opacity(0.1))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.red.opacity(0.5), lineWidth: 1)
+                        )
+                    }
+                }
+            }
             
             HStack(spacing: 16) {
                 Label("\(exercise.sets) sets", systemImage: "repeat")
@@ -240,6 +300,200 @@ struct ExerciseRow: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
+                .fill(Color.blue.opacity(0.1))
+        )
+    }
+}
+
+// MARK: - Workout Customization View
+
+struct WorkoutCustomizationView: View {
+    let plan: WorkoutPlan
+    let onPlanUpdated: (WorkoutPlan) -> Void
+    @Environment(\.dismiss) var dismiss
+    
+    @State private var customizationRequest = ""
+    @State private var isProcessing = false
+    @State private var showWarning = false
+    @State private var customizationResponse: CustomizationResponse?
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        Text("Customize Your Plan")
+                            .font(.title.bold())
+                            .foregroundColor(.white)
+                        
+                        Text("Tell us what you'd like to change:")
+                            .foregroundColor(.white.opacity(0.7))
+                        
+                        TextEditor(text: $customizationRequest)
+                            .frame(height: 150)
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(16)
+                            .foregroundColor(.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                            )
+                        
+                        Text("Examples:")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        VStack(alignment: .leading, spacing: 8) {
+                            ExampleTag(text: "More focus on push-pull-legs split")
+                            ExampleTag(text: "Add more cardio")
+                            ExampleTag(text: "Remove leg press, add squats")
+                            ExampleTag(text: "Increase upper body focus")
+                        }
+                        
+                        if customizationResponse != nil && !isProcessing {
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack {
+                                    Image(systemName: "info.circle.fill")
+                                        .foregroundColor(customizationResponse?.isHarmful == true ? .orange : .blue)
+                                    Text("AI Response:")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                }
+                                
+                                if let explanation = customizationResponse?.explanation {
+                                    Text(explanation)
+                                        .foregroundColor(.white.opacity(0.8))
+                                        .padding()
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(customizationResponse?.isHarmful == true ? Color.orange.opacity(0.1) : Color.blue.opacity(0.1))
+                                        )
+                                }
+                            }
+                        }
+                        
+                        if isProcessing {
+                            HStack {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                Text("Analyzing your changes...")
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                        }
+                        
+                        Button(action: submitCustomization) {
+                            Text("Apply Changes")
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        colors: [.green, .blue],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .cornerRadius(16)
+                        }
+                        .disabled(customizationRequest.isEmpty || isProcessing)
+                        .opacity(customizationRequest.isEmpty || isProcessing ? 0.5 : 1.0)
+                    }
+                    .padding()
+                }
+            }
+            .navigationTitle("Customize Plan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundColor(.blue)
+                }
+            }
+            .alert("⚠️ Safety Warning", isPresented: $showWarning) {
+                Button("Proceed Anyway") {
+                    if let newPlan = customizationResponse?.modifiedPlan {
+                        onPlanUpdated(newPlan)
+                        dismiss()
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                if let warning = customizationResponse?.warningMessage {
+                    Text(warning)
+                }
+            }
+        }
+    }
+    
+    private func submitCustomization() {
+        isProcessing = true
+        
+        Task {
+            do {
+                let request = CustomizationRequest(request: customizationRequest, currentPlan: plan)
+                let response = try await OpenAIService.shared.customizeWorkoutPlan(request)
+                
+                await MainActor.run {
+                    customizationResponse = response
+                    isProcessing = false
+                    
+                    if response.isHarmful {
+                        showWarning = true
+                    } else {
+                        if let newPlan = response.modifiedPlan {
+                            onPlanUpdated(newPlan)
+                            dismiss()
+                        } else {
+                            // Plan parsing failed, show explanation only
+                            print("Failed to parse modified plan, but AI provided explanation")
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isProcessing = false
+                    print("Error customizing plan: \(error.localizedDescription)")
+                    // Show error to user
+                    customizationResponse = CustomizationResponse(
+                        isHarmful: false,
+                        warningMessage: nil,
+                        modifiedPlan: nil,
+                        explanation: "Sorry, there was an error processing your request. Please try again or be more specific with your changes."
+                    )
+                }
+            }
+        }
+    }
+}
+
+struct ExampleTag: View {
+    let text: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "lightbulb.fill")
+                .foregroundColor(.yellow)
+            Text(text)
+                .foregroundColor(.blue)
+        }
+        .font(.caption)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(
+            Capsule()
                 .fill(Color.blue.opacity(0.1))
         )
     }

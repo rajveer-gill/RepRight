@@ -111,6 +111,7 @@ struct FormCheckView: View {
                 // Camera Position Guide
                 if let position = cameraPosition {
                     CameraSetupCard(
+                        exerciseName: selectedExercise,
                         position: position,
                         positionImage: positionImage,
                         onRecordVideo: {
@@ -258,6 +259,7 @@ struct FormCheckView: View {
 }
 
 struct CameraSetupCard: View {
+    let exerciseName: String
     let position: CameraPosition
     let positionImage: UIImage?
     let onRecordVideo: () -> Void
@@ -283,6 +285,30 @@ struct CameraSetupCard: View {
                 DetailRow(icon: "camera.fill", title: "Angle", value: position.angle.rawValue)
                 DetailRow(icon: "arrow.left.and.right", title: "Distance", value: position.distance)
                 DetailRow(icon: "arrow.up.and.down", title: "Height", value: position.height)
+            }
+            
+            // YouTube Tutorial Link
+            if let url = exerciseName.youtubeSearchURL {
+                Link(destination: url) {
+                    HStack {
+                        Image(systemName: "play.rectangle.fill")
+                        Text("Watch \(exerciseName) Tutorial")
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                    }
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.red)
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.red.opacity(0.1))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                    )
+                }
             }
             
             // Instructions

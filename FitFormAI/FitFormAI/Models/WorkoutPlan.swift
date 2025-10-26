@@ -54,5 +54,35 @@ struct Exercise: Codable, Identifiable {
         self.muscleGroups = muscleGroups
         self.difficulty = difficulty
     }
+    
+    // Generate YouTube search URL for this exercise
+    var youtubeSearchURL: URL? {
+        let query = name.replacingOccurrences(of: " ", with: "+")
+        let urlString = "https://www.youtube.com/results?search_query=\(query)+form+tutorial"
+        return URL(string: urlString)
+    }
+}
+
+// Helper extension to generate YouTube URLs for any exercise name
+extension String {
+    var youtubeSearchURL: URL? {
+        let query = self.replacingOccurrences(of: " ", with: "+")
+        let urlString = "https://www.youtube.com/results?search_query=\(query)+form+tutorial"
+        return URL(string: urlString)
+    }
+}
+
+// MARK: - Workout Customization Models
+
+struct CustomizationRequest: Codable {
+    let request: String
+    let currentPlan: WorkoutPlan
+}
+
+struct CustomizationResponse: Codable {
+    let isHarmful: Bool
+    let warningMessage: String?
+    let modifiedPlan: WorkoutPlan?
+    let explanation: String
 }
 
