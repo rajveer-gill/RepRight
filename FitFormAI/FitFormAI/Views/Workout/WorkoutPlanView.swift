@@ -8,10 +8,13 @@ struct WorkoutPlanView: View {
     @State private var errorMessage = ""
     @State private var showCustomization = false
     @State private var showSaveDialog = false
+    @State private var showNotesDialog = false
+    @State private var userNotes = ""
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+        ZStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
                 // Header
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Workout Plan")
@@ -111,6 +114,27 @@ struct WorkoutPlanView: View {
                         }
                         .padding(.horizontal, 24)
                         
+                        // Create New Plan Button
+                        Button(action: { showNotesDialog = true }) {
+                            HStack {
+                                Image(systemName: "arrow.clockwise")
+                                Text("Create New Plan")
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [.orange, .red],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(16)
+                        }
+                        .padding(.horizontal, 24)
+                        
                         // Workouts List
                         Text("Weekly Schedule")
                             .font(.title2.bold())
@@ -125,6 +149,36 @@ struct WorkoutPlanView: View {
                 }
                 
                 Spacer(minLength: 100)
+                }
+            }
+            
+            // Loading Overlay
+            if isGenerating {
+                ZStack {
+                    Color.black.opacity(0.7)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                        
+                        Text("Generating Your Plan...")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                        
+                        Text("This may take a moment")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                    .padding(40)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(hex: "1A1F3A"))
+                    )
+                    .padding(40)
+                }
             }
         }
         .alert("Error", isPresented: $showError) {
@@ -152,6 +206,15 @@ struct WorkoutPlanView: View {
                 )
             }
         }
+        .sheet(isPresented: $showNotesDialog) {
+            PlanNotesDialog(
+                notes: $userNotes,
+                isPresented: $showNotesDialog,
+                onConfirm: {
+                    generateNewPlan(withNotes: userNotes)
+                }
+            )
+        }
     }
     
     private func generatePlan() {
@@ -165,6 +228,38 @@ struct WorkoutPlanView: View {
                 await MainActor.run {
                     appState.saveWorkoutPlan(plan)
                     isGenerating = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    showError = true
+                    isGenerating = false
+                }
+            }
+        }
+    }
+    
+    private func generateNewPlan(withNotes notes: String) {
+        guard let profile = appState.userProfile else { return }
+        
+        // Clear current plan first
+        appState.saveWorkoutPlan(WorkoutPlan(
+            title: "",
+            description: "",
+            durationWeeks: 0,
+            workouts: []
+        ))
+        
+        isGenerating = true
+        showNotesDialog = false
+        
+        Task {
+            do {
+                let plan = try await OpenAIService.shared.generateWorkoutPlan(for: profile, userNotes: notes)
+                await MainActor.run {
+                    appState.saveWorkoutPlan(plan)
+                    isGenerating = false
+                    userNotes = "" // Clear notes after use
                 }
             } catch {
                 await MainActor.run {
@@ -698,6 +793,88 @@ struct CustomTextFieldStyle: TextFieldStyle {
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.blue.opacity(0.3), lineWidth: 1)
             )
+    }
+}
+
+// MARK: - Plan Notes Dialog
+
+struct PlanNotesDialog: View {
+    @Binding var notes: String
+    @Binding var isPresented: Bool
+    let onConfirm: () -> Void
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                VStack(spacing: 24) {
+                    Text("Plan Requirements")
+                        .font(.title.bold())
+                        .foregroundColor(.white)
+                    
+                    Text("Tell us what you want in your new workout plan")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextEditor(text: $notes)
+                            .frame(height: 200)
+                            .padding()
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(12)
+                            .foregroundColor(.white)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                            )
+                        
+                        Text("Examples: 'Focus more on upper body', 'Add cardio days', 'Include kettlebell exercises'")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    .padding(.horizontal, 24)
+                    
+                    Button(action: onConfirm) {
+                        Text("Generate Plan")
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [.orange, .red],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(16)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                    
+                    Spacer()
+                }
+                .padding(.top, 40)
+            }
+            .navigationTitle("New Plan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                    .foregroundColor(.blue)
+                }
+            }
+        }
     }
 }
 

@@ -19,8 +19,8 @@ class OpenAIService {
     
     // MARK: - Workout Plan Generation
     
-    func generateWorkoutPlan(for profile: UserProfile) async throws -> WorkoutPlan {
-        let prompt = buildWorkoutPlanPrompt(profile: profile)
+    func generateWorkoutPlan(for profile: UserProfile, userNotes: String = "") async throws -> WorkoutPlan {
+        let prompt = buildWorkoutPlanPrompt(profile: profile, userNotes: userNotes)
         
         let requestBody: [String: Any] = [
             "model": "gpt-4o",
@@ -215,10 +215,22 @@ class OpenAIService {
         return json
     }
     
-    private func buildWorkoutPlanPrompt(profile: UserProfile) -> String {
+    private func buildWorkoutPlanPrompt(profile: UserProfile, userNotes: String = "") -> String {
         let frequencyInstruction = profile.workoutFrequency.daysPerWeek == 7 ?
             "The user wants to work out every day. Create a smart 7-day routine with active recovery days. Include lighter activities like yoga, stretching, or light cardio on recovery days. Never have 7 consecutive intense training days." :
             "Create exactly \(profile.workoutFrequency.daysPerWeek) workout days per week."
+        
+        var additionalInstructions = ""
+        if !userNotes.isEmpty {
+            additionalInstructions = """
+            
+            ADDITIONAL USER REQUIREMENTS:
+            The user has provided specific requirements for this workout plan:
+            "\(userNotes)"
+            
+            IMPORTANT: Incorporate these specific requirements into the workout plan while maintaining alignment with their profile goals and equipment.
+            """
+        }
         
         return """
         Create a personalized workout plan with the following specifications:
@@ -232,6 +244,7 @@ class OpenAIService {
         - Available Equipment: \(profile.availableEquipment.map { $0.rawValue }.joined(separator: ", "))
         
         IMPORTANT: \(frequencyInstruction)
+        \(additionalInstructions)
         
         CRITICAL REST TIME GUIDELINES - YOU MUST ASSIGN APPROPRIATE REST TIMES FOR EACH EXERCISE:
         
