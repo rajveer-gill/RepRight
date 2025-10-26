@@ -26,6 +26,9 @@
 		A00018 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00018 /* OnboardingView.swift */; };
 		A00019 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00019 /* ProfileView.swift */; };
 		A00020 /* WorkoutPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00020 /* WorkoutPlanView.swift */; };
+		A00021 /* SecurityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00021 /* SecurityManager.swift */; };
+		A00022 /* LockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00022 /* LockedView.swift */; };
+		A00023 /* SavedWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00023 /* SavedWorkout.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +52,9 @@
 		B00018 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B00019 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		B00020 /* WorkoutPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPlanView.swift; sourceTree = "<group>"; };
+		B00021 /* SecurityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityManager.swift; sourceTree = "<group>"; };
+		B00022 /* LockedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedView.swift; sourceTree = "<group>"; };
+		B00023 /* SavedWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedWorkout.swift; sourceTree = "<group>"; };
 		C00001 /* FitFormAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitFormAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -102,6 +108,7 @@
 				B00007 /* FormAnalysis.swift */,
 				B00008 /* UserProfile.swift */,
 				B00009 /* WorkoutPlan.swift */,
+				B00023 /* SavedWorkout.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -110,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				B00010 /* OpenAIService.swift */,
+				B00021 /* SecurityManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -125,6 +133,7 @@
 		E00007 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				B00022 /* LockedView.swift */,
 				E00008 /* FormCheck */,
 				E00009 /* Main */,
 				E00010 /* Onboarding */,
@@ -256,6 +265,8 @@
 				A00009 /* WorkoutPlan.swift in Sources */,
 				A00010 /* OpenAIService.swift in Sources */,
 				A00011 /* ColorExtension.swift in Sources */,
+				A00021 /* SecurityManager.swift in Sources */,
+				A00023 /* SavedWorkout.swift in Sources */,
 				A00012 /* FormAnalysisResultView.swift in Sources */,
 				A00013 /* FormCheckView.swift in Sources */,
 				A00014 /* VideoRecorderView.swift in Sources */,
@@ -265,6 +276,7 @@
 				A00018 /* OnboardingView.swift in Sources */,
 				A00019 /* ProfileView.swift in Sources */,
 				A00020 /* WorkoutPlanView.swift in Sources */,
+				A00022 /* LockedView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

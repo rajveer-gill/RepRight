@@ -18,11 +18,21 @@ class AppState: ObservableObject {
         saveState()
     }
     
+    func saveWorkoutPlan(_ plan: WorkoutPlan) {
+        self.currentWorkoutPlan = plan
+        saveState()
+    }
+    
     private func saveState() {
         UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding")
         if let profile = userProfile {
             if let encoded = try? JSONEncoder().encode(profile) {
                 UserDefaults.standard.set(encoded, forKey: "userProfile")
+            }
+        }
+        if let plan = currentWorkoutPlan {
+            if let encoded = try? JSONEncoder().encode(plan) {
+                UserDefaults.standard.set(encoded, forKey: "currentWorkoutPlan")
             }
         }
     }
@@ -33,6 +43,15 @@ class AppState: ObservableObject {
            let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
             userProfile = profile
         }
+        if let data = UserDefaults.standard.data(forKey: "currentWorkoutPlan"),
+           let plan = try? JSONDecoder().decode(WorkoutPlan.self, from: data) {
+            currentWorkoutPlan = plan
+        }
+    }
+    
+    func clearWorkoutPlan() {
+        currentWorkoutPlan = nil
+        UserDefaults.standard.removeObject(forKey: "currentWorkoutPlan")
     }
 }
 

@@ -91,11 +91,11 @@ struct ProfileView: View {
                     .padding(.horizontal, 24)
                 }
                 
-                // Logout Button
-                Button(action: logout) {
+                // Delete All Data Button
+                Button(action: deleteAllData) {
                     HStack {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
-                        Text("Logout")
+                        Image(systemName: "trash.fill")
+                        Text("Delete All Data")
                             .fontWeight(.semibold)
                     }
                     .foregroundColor(.red)
@@ -117,10 +117,16 @@ struct ProfileView: View {
         }
     }
     
-    private func logout() {
+    private func deleteAllData() {
+        // Clear all saved data and return to onboarding
         appState.hasCompletedOnboarding = false
         appState.userProfile = nil
         appState.currentWorkoutPlan = nil
+        
+        // Clear UserDefaults
+        UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.removeObject(forKey: "userProfile")
+        UserDefaults.standard.removeObject(forKey: "currentWorkoutPlan")
     }
 }
 

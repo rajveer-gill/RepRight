@@ -247,7 +247,6 @@ class OpenAIService {
                 {
                     "day": "string (e.g., Monday, Day 1)",
                     "title": "string",
-                    "estimatedDuration": number (minutes),
                     "exercises": [
                         {
                             "name": "string",
@@ -293,7 +292,6 @@ class OpenAIService {
     private func parseWorkout(_ data: [String: Any]) throws -> Workout {
         let day = data["day"] as? String ?? "Day"
         let title = data["title"] as? String ?? "Workout"
-        let estimatedDuration = data["estimatedDuration"] as? Int ?? 60
         
         var exercises: [Exercise] = []
         if let exercisesData = data["exercises"] as? [[String: Any]] {
@@ -303,7 +301,16 @@ class OpenAIService {
             }
         }
         
+        // Calculate estimated duration based on exercises
+        let estimatedDuration = calculateWorkoutDuration(exercises: exercises)
+        
         return Workout(day: day, title: title, exercises: exercises, estimatedDuration: estimatedDuration)
+    }
+    
+    private func calculateWorkoutDuration(exercises: [Exercise]) -> Int {
+        // Average time per exercise: 5-10 minutes (sets + rest)
+        let avgTimePerExercise = 7
+        return exercises.count * avgTimePerExercise
     }
     
     private func parseExercise(_ data: [String: Any]) throws -> Exercise {

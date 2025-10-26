@@ -2,10 +2,12 @@ import SwiftUI
 
 struct WorkoutPlanView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var savedWorkoutsManager = SavedWorkoutsManager()
     @State private var isGenerating = false
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var showCustomization = false
+    @State private var showSaveDialog = false
     
     var body: some View {
         ScrollView {
@@ -73,31 +75,39 @@ struct WorkoutPlanView: View {
                         InfoCard(
                             title: "Plan Overview",
                             items: [
-                                ("Duration", "\(plan.durationWeeks) weeks"),
                                 ("Workouts", "\(plan.workouts.count) per week"),
                                 ("Focus", plan.description)
                             ]
                         )
                         .padding(.horizontal, 24)
                         
-                        // Customize Plan Button
-                        Button(action: { showCustomization = true }) {
-                            HStack {
-                                Image(systemName: "slider.horizontal.3")
-                                Text("Customize This Plan")
-                                    .fontWeight(.semibold)
+                        // Action Buttons
+                        HStack(spacing: 12) {
+                            Button(action: { showCustomization = true }) {
+                                HStack {
+                                    Image(systemName: "slider.horizontal.3")
+                                    Text("Customize")
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue.opacity(0.6))
+                                .cornerRadius(16)
                             }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(
-                                LinearGradient(
-                                    colors: [.green, .blue],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(16)
+                            
+                            Button(action: { showSaveDialog = true }) {
+                                HStack {
+                                    Image(systemName: "square.and.arrow.down")
+                                    Text("Save")
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.green.opacity(0.6))
+                                .cornerRadius(16)
+                            }
                         }
                         .padding(.horizontal, 24)
                         
@@ -127,9 +137,18 @@ struct WorkoutPlanView: View {
                 WorkoutCustomizationView(
                     plan: plan,
                     onPlanUpdated: { newPlan in
-                        appState.currentWorkoutPlan = newPlan
+                        appState.saveWorkoutPlan(newPlan)
                         showCustomization = false
                     }
+                )
+            }
+        }
+        .sheet(isPresented: $showSaveDialog) {
+            if let plan = appState.currentWorkoutPlan {
+                SaveWorkoutDialog(
+                    plan: plan,
+                    savedWorkoutsManager: savedWorkoutsManager,
+                    isPresented: $showSaveDialog
                 )
             }
         }
@@ -144,7 +163,7 @@ struct WorkoutPlanView: View {
             do {
                 let plan = try await OpenAIService.shared.generateWorkoutPlan(for: profile)
                 await MainActor.run {
-                    appState.currentWorkoutPlan = plan
+                    appState.saveWorkoutPlan(plan)
                     isGenerating = false
                 }
             } catch {
@@ -498,4 +517,174 @@ struct ExampleTag: View {
         )
     }
 }
+
+// MARK: - Save Workout Dialog
+
+struct SaveWorkoutDialog: View {
+    let plan: WorkoutPlan
+    @ObservedObject var savedWorkoutsManager: SavedWorkoutsManager
+    @Binding var isPresented: Bool
+    
+    @State private var selectedSlot: Int = 1
+    @State private var workoutName: String = ""
+    
+    private var existingWorkoutInSlot: SavedWorkout? {
+        savedWorkoutsManager.savedWorkouts.first { $0.slotNumber == selectedSlot }
+    }
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                gradientBackground
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        titleSection
+                        nameInputSection
+                        slotSelectionSection
+                        saveButton
+                    }
+                    .padding(.top, 40)
+                    .padding(.horizontal, 24)
+                }
+            }
+            .navigationTitle("Save Workout")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        isPresented = false
+                    }
+                    .foregroundColor(.blue)
+                }
+            }
+        }
+    }
+    
+    private var gradientBackground: some View {
+        LinearGradient(
+            colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+    
+    private var titleSection: some View {
+        Text("Save Workout Plan")
+            .font(.title.bold())
+            .foregroundColor(.white)
+    }
+    
+    private var nameInputSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Workout Name")
+                .font(.headline)
+                .foregroundColor(.white)
+            
+            TextField("e.g., Summer 2024 Plan", text: $workoutName)
+                .textFieldStyle(CustomTextFieldStyle())
+        }
+    }
+    
+    private var slotSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Choose a Slot")
+                .font(.headline)
+                .foregroundColor(.white)
+            
+            VStack(spacing: 12) {
+                slotButton(slot: 1)
+                slotButton(slot: 2)
+                slotButton(slot: 3)
+            }
+        }
+    }
+    
+    private func slotButton(slot: Int) -> some View {
+        let existingWorkout = savedWorkoutsManager.savedWorkouts.first { $0.slotNumber == slot }
+        
+        return Button(action: { selectedSlot = slot }) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: selectedSlot == slot ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(selectedSlot == slot ? .green : .white.opacity(0.3))
+                        Text("Slot \(slot)")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        if existingWorkout != nil {
+                            Text("(Occupied)")
+                                .font(.caption)
+                                .foregroundColor(.orange)
+                        }
+                    }
+                    
+                    if let existing = existingWorkout {
+                        Text(existing.name)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.7))
+                        Text("Saved: \(existing.savedDate, style: .date)")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(selectedSlot == slot ? Color.green.opacity(0.2) : Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(selectedSlot == slot ? Color.green : Color.white.opacity(0.1), lineWidth: 2)
+            )
+        }
+    }
+    
+    private var saveButton: some View {
+        Button(action: saveWorkout) {
+            Text(existingWorkoutInSlot != nil ? "Overwrite Slot \(selectedSlot)" : "Save to Slot \(selectedSlot)")
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [.green, .blue],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(16)
+        }
+        .disabled(workoutName.isEmpty)
+        .opacity(workoutName.isEmpty ? 0.5 : 1.0)
+        .padding(.bottom, 40)
+    }
+    
+    private func saveWorkout() {
+        guard !workoutName.isEmpty else { return }
+        
+        savedWorkoutsManager.saveWorkout(plan, inSlot: selectedSlot, withName: workoutName)
+        isPresented = false
+    }
+}
+
+struct CustomTextFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding()
+            .background(Color.white.opacity(0.1))
+            .cornerRadius(12)
+            .foregroundColor(.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+            )
+    }
+}
+
 
