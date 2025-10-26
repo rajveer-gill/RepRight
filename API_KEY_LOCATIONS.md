@@ -2,7 +2,7 @@
 
 ## Where API Keys Are Stored
 
-This document shows you exactly where API keys are used in the FitForm AI codebase.
+This document shows you exactly where API keys are used in the RepRight codebase.
 
 ---
 

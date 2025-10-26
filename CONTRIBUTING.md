@@ -1,6 +1,6 @@
-# Contributing to FitForm AI
+# Contributing to RepRight
 
-Thank you for your interest in contributing to FitForm AI! 🎉
+Thank you for your interest in contributing to RepRight! 🎉
 
 ## Getting Started
 

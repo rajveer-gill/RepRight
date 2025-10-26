@@ -10,6 +10,7 @@ struct OnboardingView: View {
     @State private var restrictions = ""
     @State private var selectedWorkoutTypes: Set<UserProfile.WorkoutType> = []
     @State private var selectedEquipment: Set<UserProfile.Equipment> = []
+    @State private var selectedFrequency: UserProfile.WorkoutFrequency = .threeDays
     
     var body: some View {
         ZStack {
@@ -24,7 +25,7 @@ struct OnboardingView: View {
             VStack(spacing: 0) {
                 // Progress Indicator
                 HStack(spacing: 8) {
-                    ForEach(0..<6) { index in
+                    ForEach(0..<7) { index in
                         Capsule()
                             .fill(index <= currentStep ? Color.blue : Color.gray.opacity(0.3))
                             .frame(height: 4)
@@ -49,8 +50,11 @@ struct OnboardingView: View {
                     WorkoutTypeStep(selectedTypes: $selectedWorkoutTypes, selectedEquipment: $selectedEquipment)
                         .tag(4)
                     
-                    RestrictionsStep(restrictions: $restrictions)
+                    WorkoutFrequencyStep(selectedFrequency: $selectedFrequency)
                         .tag(5)
+                    
+                    RestrictionsStep(restrictions: $restrictions)
+                        .tag(6)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 
@@ -71,7 +75,7 @@ struct OnboardingView: View {
                     }
                     
                     Button(action: handleNext) {
-                        Text(currentStep == 5 ? "Get Started" : "Continue")
+                        Text(currentStep == 6 ? "Get Started" : "Continue")
                             .fontWeight(.semibold)
                             .foregroundColor(.white)
                             .padding()
@@ -102,12 +106,13 @@ struct OnboardingView: View {
         case 3: return !selectedGoals.isEmpty
         case 4: return !selectedWorkoutTypes.isEmpty && !selectedEquipment.isEmpty
         case 5: return true
+        case 6: return true
         default: return false
         }
     }
     
     private func handleNext() {
-        if currentStep < 5 {
+        if currentStep < 6 {
             withAnimation {
                 currentStep += 1
             }
@@ -126,7 +131,8 @@ struct OnboardingView: View {
             goals: Array(selectedGoals),
             restrictions: restrictionsList,
             preferredWorkoutTypes: Array(selectedWorkoutTypes),
-            availableEquipment: Array(selectedEquipment)
+            availableEquipment: Array(selectedEquipment),
+            workoutFrequency: selectedFrequency
         )
         
         appState.completeOnboarding(with: profile)
@@ -154,7 +160,7 @@ struct WelcomeStep: View {
                 .font(.title2)
                 .foregroundColor(.white.opacity(0.7))
             
-            Text("FitForm AI")
+            Text("RepRight")
                 .font(.system(size: 48, weight: .bold))
                 .foregroundStyle(
                     LinearGradient(
@@ -354,6 +360,42 @@ struct WorkoutTypeStep: View {
                             } else {
                                 selectedEquipment.insert(equipment)
                             }
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
+            }
+        }
+    }
+}
+
+struct WorkoutFrequencyStep: View {
+    @Binding var selectedFrequency: UserProfile.WorkoutFrequency
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 32) {
+                VStack(spacing: 16) {
+                    Text("How often can you work out?")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Be realistic - we'll optimize your routine")
+                        .foregroundColor(.white.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 40)
+                
+                VStack(spacing: 12) {
+                    ForEach(UserProfile.WorkoutFrequency.allCases, id: \.self) { frequency in
+                        SelectionCard(
+                            title: frequency.rawValue,
+                            description: frequency.description,
+                            isSelected: selectedFrequency == frequency
+                        ) {
+                            selectedFrequency = frequency
                         }
                     }
                 }

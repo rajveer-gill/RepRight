@@ -51,7 +51,7 @@ git status
 git add .
 
 # Commit
-git commit -m "Initial commit: FitForm AI - iOS fitness app with OpenAI integration"
+git commit -m "Initial commit: RepRight - iOS fitness app with OpenAI integration"
 
 # Push to GitHub
 git push origin main

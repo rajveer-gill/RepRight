@@ -1,4 +1,4 @@
-# 🔐 Security Guide - FitForm AI
+# 🔐 Security Guide - RepRight
 
 ## ⚠️ CRITICAL: Protecting Your API Keys
 

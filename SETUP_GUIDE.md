@@ -1,4 +1,4 @@
-# Quick Setup Guide for FitForm AI
+# Quick Setup Guide for RepRight
 
 ## Step-by-Step Setup
 
@@ -7,7 +7,7 @@
 1. Go to [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 2. Sign in or create an account
 3. Click **"Create new secret key"**
-4. Give it a name (e.g., "FitForm AI")
+4. Give it a name (e.g., "RepRight")
 5. Copy the key immediately (you won't see it again!)
 
 ### 2. Add Billing Information
@@ -181,7 +181,7 @@ Set up usage limits:
 
 ### Camera not working
 
-- Go to iPhone Settings > FitForm AI
+- Go to iPhone Settings > RepRight
 - Enable Camera and Photo Library permissions
 - Restart the app
 

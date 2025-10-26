@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![FitForm AI](https://img.shields.io/badge/Platform-iOS-blue)
+![RepRight](https://img.shields.io/badge/Platform-iOS-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
 ![SwiftUI](https://img.shields.io/badge/SwiftUI-4.0-green)
 ![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-purple)
@@ -149,7 +149,7 @@ FitFormAI/
 
 When you first launch the app, you'll go through a beautiful onboarding experience:
 
-- **Welcome Screen**: Introduction to FitForm AI
+- **Welcome Screen**: Introduction to RepRight
 - **Personal Info**: Name and age
 - **Fitness Level**: Beginner to Athlete
 - **Goals Selection**: Weight loss, muscle gain, endurance, etc.
@@ -386,7 +386,7 @@ This project is available as a reference implementation. Feel free to use it as 
 - **Solution**: Ensure video is under 30 seconds and properly formatted
 
 **Problem**: Camera permission denied
-- **Solution**: Go to Settings > FitForm AI > Enable Camera and Photo Library
+- **Solution**: Go to Settings > RepRight > Enable Camera and Photo Library
 
 **Problem**: Workout plan generation slow
 - **Solution**: OpenAI API can take 5-15 seconds; this is normal

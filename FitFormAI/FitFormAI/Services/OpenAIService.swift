@@ -216,20 +216,26 @@ class OpenAIService {
     }
     
     private func buildWorkoutPlanPrompt(profile: UserProfile) -> String {
+        let frequencyInstruction = profile.workoutFrequency.daysPerWeek == 7 ?
+            "The user wants to work out every day. Create a smart 7-day routine with active recovery days. Include lighter activities like yoga, stretching, or light cardio on recovery days. Never have 7 consecutive intense training days." :
+            "Create exactly \(profile.workoutFrequency.daysPerWeek) workout days per week."
+        
         return """
         Create a personalized workout plan with the following specifications:
         
         User Profile:
         - Fitness Level: \(profile.fitnessLevel.rawValue)
         - Goals: \(profile.goals.map { $0.rawValue }.joined(separator: ", "))
+        - Workout Frequency: \(profile.workoutFrequency.rawValue)
         - Restrictions: \(profile.restrictions.isEmpty ? "None" : profile.restrictions.joined(separator: ", "))
         - Preferred Workout Types: \(profile.preferredWorkoutTypes.map { $0.rawValue }.joined(separator: ", "))
         - Available Equipment: \(profile.availableEquipment.map { $0.rawValue }.joined(separator: ", "))
         
+        IMPORTANT: \(frequencyInstruction)
+        
         Create a comprehensive workout plan with:
-        - 3-5 workout days per week
         - Appropriate exercises for their level and goals
-        - Proper progression and rest days
+        - Proper progression and rest days (if not working out 7 days)
         - Clear sets, reps, and rest periods
         
         Respond in JSON format:

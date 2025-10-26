@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>FitForm AI</string>
+	<string>RepRight</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -54,11 +54,11 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>FitForm AI needs camera access to record your workout videos for form analysis.</string>
+	<string>RepRight needs camera access to record your workout videos for form analysis.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>FitForm AI needs photo library access to let you upload workout videos for form analysis.</string>
+	<string>RepRight needs photo library access to let you upload workout videos for form analysis.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>FitForm AI needs microphone access to record audio with your workout videos.</string>
+	<string>RepRight needs microphone access to record audio with your workout videos.</string>
 	<key>OPENAI_API_KEY</key>
 	<string>YOUR_OPENAI_API_KEY_HERE</string>
 </dict>

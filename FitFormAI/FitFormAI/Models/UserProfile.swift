@@ -8,6 +8,7 @@ struct UserProfile: Codable {
     let restrictions: [String]
     let preferredWorkoutTypes: [WorkoutType]
     let availableEquipment: [Equipment]
+    let workoutFrequency: WorkoutFrequency
     
     enum FitnessLevel: String, Codable, CaseIterable {
         case beginner = "Beginner"
@@ -45,6 +46,35 @@ struct UserProfile: Codable {
         case bench = "Bench"
         case machine = "Gym Machines"
         case none = "No Equipment"
+    }
+    
+    enum WorkoutFrequency: String, Codable, CaseIterable {
+        case twoDays = "2 days per week"
+        case threeDays = "3 days per week"
+        case fourDays = "4 days per week"
+        case fiveDays = "5 days per week"
+        case sixDays = "6 days per week"
+        case sevenDays = "Every day"
+        
+        var daysPerWeek: Int {
+            switch self {
+            case .twoDays: return 2
+            case .threeDays: return 3
+            case .fourDays: return 4
+            case .fiveDays: return 5
+            case .sixDays: return 6
+            case .sevenDays: return 7
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .sevenDays:
+                return "I can work out every day, but prefer active recovery and lighter sessions"
+            default:
+                return "I can dedicate this many days per week to structured workouts"
+            }
+        }
     }
 }
 
