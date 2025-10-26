@@ -35,15 +35,6 @@ struct ProfileView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.top, 60)
                 
-                // Stats Grid
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ProfileStatCard(title: "Workouts", value: "24", icon: "figure.walk")
-                    ProfileStatCard(title: "Streak", value: "7 days", icon: "flame.fill")
-                    ProfileStatCard(title: "Total Time", value: "540 min", icon: "clock.fill")
-                    ProfileStatCard(title: "Form Checks", value: "12", icon: "video.fill")
-                }
-                .padding(.horizontal, 24)
-                
                 // Profile Info
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Profile Information")
@@ -71,12 +62,6 @@ struct ProfileView: View {
                     
                     VStack(spacing: 0) {
                         SettingsButton(icon: "person.fill", title: "Edit Profile", color: .blue) {}
-                        Divider().background(Color.white.opacity(0.1))
-                        
-                        SettingsButton(icon: "bell.fill", title: "Notifications", color: .orange) {}
-                        Divider().background(Color.white.opacity(0.1))
-                        
-                        SettingsButton(icon: "key.fill", title: "API Settings", color: .purple) {}
                         Divider().background(Color.white.opacity(0.1))
                         
                         SettingsButton(icon: "questionmark.circle.fill", title: "Help & Support", color: .green) {}
