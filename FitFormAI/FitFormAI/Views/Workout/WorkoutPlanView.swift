@@ -227,6 +227,7 @@ struct WorkoutPlanView: View {
                 let plan = try await OpenAIService.shared.generateWorkoutPlan(for: profile)
                 await MainActor.run {
                     appState.saveWorkoutPlan(plan)
+                    appState.currentPlanName = "" // No custom name for auto-generated plans
                     isGenerating = false
                 }
             } catch {
@@ -249,7 +250,7 @@ struct WorkoutPlanView: View {
             durationWeeks: 0,
             workouts: []
         ))
-        
+        appState.currentPlanName = "" // Clear plan name
         isGenerating = true
         showNotesDialog = false
         
@@ -258,6 +259,7 @@ struct WorkoutPlanView: View {
                 let plan = try await OpenAIService.shared.generateWorkoutPlan(for: profile, userNotes: notes)
                 await MainActor.run {
                     appState.saveWorkoutPlan(plan)
+                    appState.currentPlanName = "" // No custom name for newly generated plans
                     isGenerating = false
                     userNotes = "" // Clear notes after use
                 }

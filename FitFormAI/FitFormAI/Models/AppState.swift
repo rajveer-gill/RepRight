@@ -5,6 +5,7 @@ class AppState: ObservableObject {
     @Published var hasCompletedOnboarding: Bool = false
     @Published var userProfile: UserProfile?
     @Published var currentWorkoutPlan: WorkoutPlan?
+    @Published var currentPlanName: String = "" // Name of the active workout plan
     @Published var isLoading: Bool = false
     
     init() {
@@ -25,6 +26,7 @@ class AppState: ObservableObject {
     
     private func saveState() {
         UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding")
+        UserDefaults.standard.set(currentPlanName, forKey: "currentPlanName")
         if let profile = userProfile {
             if let encoded = try? JSONEncoder().encode(profile) {
                 UserDefaults.standard.set(encoded, forKey: "userProfile")
@@ -39,6 +41,7 @@ class AppState: ObservableObject {
     
     private func loadState() {
         hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        currentPlanName = UserDefaults.standard.string(forKey: "currentPlanName") ?? ""
         if let data = UserDefaults.standard.data(forKey: "userProfile"),
            let profile = try? JSONDecoder().decode(UserProfile.self, from: data) {
             userProfile = profile

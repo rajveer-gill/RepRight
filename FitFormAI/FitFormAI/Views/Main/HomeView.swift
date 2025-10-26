@@ -39,6 +39,21 @@ struct HomeView: View {
                 // Today's Workout Card
                 if let workout = appState.currentWorkoutPlan?.workouts.first {
                     VStack(alignment: .leading, spacing: 16) {
+                        // Plan Name Header
+                        if !appState.currentPlanName.isEmpty {
+                            Text(appState.currentPlanName)
+                                .font(.title3.bold())
+                                .foregroundStyle(
+                                    LinearGradient(
+                                        colors: [.orange, .red],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, -8)
+                        }
+                        
                         HStack {
                             Text("Today's Workout")
                                 .font(.title2.bold())
@@ -109,6 +124,7 @@ struct HomeView: View {
                 isPresented: $showWorkoutSelector,
                 onWorkoutSelected: { savedWorkout in
                     appState.saveWorkoutPlan(savedWorkout.workoutPlan)
+                    appState.currentPlanName = savedWorkout.name
                     selectedSavedWorkout = savedWorkout
                     showWorkoutSelector = false
                 }
