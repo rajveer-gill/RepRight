@@ -268,6 +268,20 @@ struct WorkoutDetailCard: View {
 struct ExerciseRow: View {
     let exercise: Exercise
     
+    private var restTimeFormatted: String {
+        if exercise.restTime < 60 {
+            return "\(exercise.restTime)s rest"
+        } else {
+            let minutes = exercise.restTime / 60
+            let seconds = exercise.restTime % 60
+            if seconds == 0 {
+                return "\(minutes)m rest"
+            } else {
+                return "\(minutes)m \(seconds)s rest"
+            }
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -304,7 +318,7 @@ struct ExerciseRow: View {
             HStack(spacing: 16) {
                 Label("\(exercise.sets) sets", systemImage: "repeat")
                 Label(exercise.reps, systemImage: "number")
-                Label("\(exercise.restTime)s rest", systemImage: "timer")
+                Label(restTimeFormatted, systemImage: "timer")
             }
             .font(.caption)
             .foregroundColor(.white.opacity(0.7))

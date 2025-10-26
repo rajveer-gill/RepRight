@@ -233,10 +233,49 @@ class OpenAIService {
         
         IMPORTANT: \(frequencyInstruction)
         
+        CRITICAL REST TIME GUIDELINES - YOU MUST ASSIGN APPROPRIATE REST TIMES FOR EACH EXERCISE:
+        
+        Based on the user's primary goals: \(profile.goals.map { $0.rawValue }.joined(separator: ", "))
+        
+        Apply these rest time rules VARYING BY EXERCISE TYPE:
+        
+        1. For STRENGTH/BUILD STRENGTH goals (heavy compound movements like squats, deadlifts, bench press):
+           - Use 2-3 minutes for main lifts (allowing full ATP/creatine phosphate recovery)
+           - Use 3-5 minutes for max effort sets
+           - Use 90-120 seconds for accessory work
+        
+        2. For MUSCLE GAIN/HYPERTROPHY goals:
+           - Use 60-90 seconds for moderate load exercises
+           - Use 90-120 seconds for heavier compound movements
+           - Use 45-60 seconds for isolation exercises
+           - Vary within this range based on exercise intensity
+        
+        3. For WEIGHT LOSS/HIIT goals:
+           - Use 30-60 seconds for most exercises (keep heart rate elevated)
+           - Use 15-45 seconds between circuit exercises
+           - Maximum 60 seconds for any rest period
+        
+        4. For ENDURANCE goals:
+           - Use 30-45 seconds for most exercises
+           - Use 60 seconds for higher intensity intervals
+           - Keep heart rate in aerobic zone
+        
+        5. For GENERAL FITNESS:
+           - Use 60-120 seconds (balanced approach)
+           - Heavier exercises get more rest, lighter get less
+           - Consider exercise intensity within each workout
+        
+        YOU MUST:
+        - Assign DIFFERENT rest times for different exercises in the same workout
+        - Match rest time to exercise intensity and the user's specific goals
+        - NEVER default to "60 seconds" for everything
+        - Give compound/heavy lifts MORE rest than isolation/light exercises
+        - Consider the user's PRIMARY goal when assigning rest times
+        
         Create a comprehensive workout plan with:
         - Appropriate exercises for their level and goals
+        - VARYING rest times that match exercise type and user goals
         - Proper progression and rest days (if not working out 7 days)
-        - Clear sets, reps, and rest periods
         
         Respond in JSON format:
         {
@@ -317,7 +356,16 @@ class OpenAIService {
         let name = data["name"] as? String ?? "Exercise"
         let sets = data["sets"] as? Int ?? 3
         let reps = data["reps"] as? String ?? "10"
-        let restTime = data["restTime"] as? Int ?? 60
+        
+        // Parse rest time with validation
+        var restTime = data["restTime"] as? Int ?? 60
+        if let restTimeInt = data["restTime"] as? Int {
+            restTime = restTimeInt
+            print("✅ Exercise '\(name)' has rest time: \(restTime)s")
+        } else {
+            print("⚠️ Exercise '\(name)' missing restTime, defaulting to 60s")
+        }
+        
         let notes = data["notes"] as? String
         let muscleGroups = data["muscleGroups"] as? [String] ?? []
         let difficulty = data["difficulty"] as? String ?? "Intermediate"
@@ -421,6 +469,16 @@ class OpenAIService {
         - Keep the same workout structure and day/title labels (e.g., "Upper Body", "Lower Body", "Push Day", "Pull Day", "Leg Day")
         - Only change the specific exercises requested
         - Maintain the same workout focus unless the request explicitly changes it
+        
+        REST TIME ASSIGNMENT RULES:
+        - For compound/heavy exercises (squats, deadlifts, bench press): 90-180 seconds
+        - For isolation exercises (bicep curls, tricep extensions): 45-90 seconds
+        - For high-rep/endurance exercises: 30-60 seconds
+        - For cardio/HIIT exercises: 15-45 seconds
+        - VARY rest times based on exercise intensity - never use the same rest time for all exercises
+        - Heavier, more intense exercises get MORE rest time
+        - Lighter, isolation exercises get LESS rest time
+        - Include restTime (in seconds) for ALL exercises in the modified plan with appropriate variation
         
         Analyze this request and respond in JSON format:
         {
