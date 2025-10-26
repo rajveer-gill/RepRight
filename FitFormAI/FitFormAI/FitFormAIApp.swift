@@ -5,12 +5,14 @@ import UIKit
 struct FitFormAIApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var securityManager = SecurityManager()
+    @StateObject private var savedWorkoutsManager = SavedWorkoutsManager()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
                 .environmentObject(securityManager)
+                .environmentObject(savedWorkoutsManager)
                 .preferredColorScheme(.dark)
                 .onAppear {
                     // Request authentication on app launch

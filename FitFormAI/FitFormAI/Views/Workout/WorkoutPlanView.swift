@@ -2,7 +2,7 @@ import SwiftUI
 
 struct WorkoutPlanView: View {
     @EnvironmentObject var appState: AppState
-    @StateObject private var savedWorkoutsManager = SavedWorkoutsManager()
+    @EnvironmentObject var savedWorkoutsManager: SavedWorkoutsManager
     @State private var isGenerating = false
     @State private var showError = false
     @State private var errorMessage = ""

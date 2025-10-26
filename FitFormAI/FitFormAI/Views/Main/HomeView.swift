@@ -2,6 +2,9 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var savedWorkoutsManager: SavedWorkoutsManager
+    @State private var showWorkoutSelector = false
+    @State private var selectedSavedWorkout: SavedWorkout?
     
     var body: some View {
         ScrollView {
@@ -36,10 +39,28 @@ struct HomeView: View {
                 // Today's Workout Card
                 if let workout = appState.currentWorkoutPlan?.workouts.first {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Today's Workout")
-                            .font(.title2.bold())
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 24)
+                        HStack {
+                            Text("Today's Workout")
+                                .font(.title2.bold())
+                                .foregroundColor(.white)
+                            
+                            Spacer()
+                            
+                            Button(action: { showWorkoutSelector = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "square.grid.2x2")
+                                    Text("Switch Plan")
+                                }
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.blue)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.blue.opacity(0.2))
+                                .cornerRadius(12)
+                            }
+                        }
+                        .padding(.horizontal, 24)
                         
                         WorkoutCard(workout: workout)
                             .padding(.horizontal, 24)
@@ -80,6 +101,18 @@ struct HomeView: View {
                 
                 Spacer(minLength: 100)
             }
+        }
+        .sheet(isPresented: $showWorkoutSelector) {
+            WorkoutSelectorView(
+                savedWorkoutsManager: savedWorkoutsManager,
+                selectedWorkout: $selectedSavedWorkout,
+                isPresented: $showWorkoutSelector,
+                onWorkoutSelected: { savedWorkout in
+                    appState.saveWorkoutPlan(savedWorkout.workoutPlan)
+                    selectedSavedWorkout = savedWorkout
+                    showWorkoutSelector = false
+                }
+            )
         }
     }
 }
@@ -223,6 +256,138 @@ struct QuickActionButton: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
+            )
+        }
+    }
+}
+
+// MARK: - Workout Selector
+
+struct WorkoutSelectorView: View {
+    @ObservedObject var savedWorkoutsManager: SavedWorkoutsManager
+    @Binding var selectedWorkout: SavedWorkout?
+    @Binding var isPresented: Bool
+    let onWorkoutSelected: (SavedWorkout) -> Void
+    
+    // Computed property to ensure workouts are always sorted by slot number
+    private var sortedWorkouts: [SavedWorkout] {
+        savedWorkoutsManager.savedWorkouts.sorted { $0.slotNumber < $1.slotNumber }
+    }
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                LinearGradient(
+                    colors: [Color(hex: "0A0E27"), Color(hex: "1A1F3A")],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        if savedWorkoutsManager.savedWorkouts.isEmpty {
+                            emptyStateView
+                        } else {
+                            VStack(spacing: 16) {
+                                Text("Switch Workout Plan")
+                                    .font(.title.bold())
+                                    .foregroundColor(.white)
+                                
+                                ForEach(sortedWorkouts) { savedWorkout in
+                                    SavedWorkoutCard(savedWorkout: savedWorkout) {
+                                        onWorkoutSelected(savedWorkout)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 24)
+                        }
+                    }
+                    .padding(.top, 40)
+                }
+            }
+            .navigationTitle("Select Workout")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        isPresented = false
+                    }
+                    .foregroundColor(.blue)
+                }
+            }
+        }
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "list.bullet.rectangle")
+                .font(.system(size: 60))
+                .foregroundColor(.white.opacity(0.3))
+            
+            Text("No Saved Workouts")
+                .font(.title2)
+                .foregroundColor(.white)
+            
+            Text("Save a workout plan to switch between different routines")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .padding(.top, 100)
+    }
+}
+
+struct SavedWorkoutCard: View {
+    let savedWorkout: SavedWorkout
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: "bookmark.fill")
+                                .foregroundColor(.blue)
+                            Text(savedWorkout.name)
+                                .font(.headline)
+                                .foregroundColor(.white)
+                        }
+                        
+                        Text("Slot \(savedWorkout.slotNumber)")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.7))
+                        
+                        Text(savedWorkout.savedDate, style: .date)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.white.opacity(0.3))
+                }
+                
+                Divider()
+                    .background(Color.white.opacity(0.2))
+                
+                HStack(spacing: 16) {
+                    Label("\(savedWorkout.workoutPlan.workouts.count) workouts", systemImage: "calendar")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
             )
         }
     }

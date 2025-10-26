@@ -34,6 +34,9 @@ class SavedWorkoutsManager: ObservableObject {
         let savedWorkout = SavedWorkout(workoutPlan: workout, slotNumber: slot, name: name)
         savedWorkouts.append(savedWorkout)
         
+        // Sort by slot number to ensure proper order
+        savedWorkouts.sort { $0.slotNumber < $1.slotNumber }
+        
         // Ensure we don't exceed max slots
         savedWorkouts = Array(savedWorkouts.suffix(maxSlots))
         
@@ -69,7 +72,7 @@ class SavedWorkoutsManager: ObservableObject {
     private func loadSavedWorkouts() {
         if let data = UserDefaults.standard.data(forKey: savedWorkoutsKey),
            let workouts = try? JSONDecoder().decode([SavedWorkout].self, from: data) {
-            savedWorkouts = workouts
+            savedWorkouts = workouts.sorted { $0.slotNumber < $1.slotNumber }
         }
     }
     
