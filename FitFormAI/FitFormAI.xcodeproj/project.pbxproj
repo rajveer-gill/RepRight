@@ -15,6 +15,7 @@
 		A00007 /* FormAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00007 /* FormAnalysis.swift */; };
 		A00008 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00008 /* UserProfile.swift */; };
 		A00009 /* WorkoutPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00009 /* WorkoutPlan.swift */; };
+		A00009A /* WorkoutFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00009A /* WorkoutFlow.swift */; };
 		A00010 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00010 /* OpenAIService.swift */; };
 		A00011 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00011 /* ColorExtension.swift */; };
 		A00012 /* FormAnalysisResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00012 /* FormAnalysisResultView.swift */; };
@@ -26,6 +27,7 @@
 		A00018 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00018 /* OnboardingView.swift */; };
 		A00019 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00019 /* ProfileView.swift */; };
 		A00020 /* WorkoutPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00020 /* WorkoutPlanView.swift */; };
+		A00020A /* WorkoutFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00020A /* WorkoutFlowView.swift */; };
 		A00021 /* SecurityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00021 /* SecurityManager.swift */; };
 		A00022 /* LockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00022 /* LockedView.swift */; };
 		A00023 /* SavedWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00023 /* SavedWorkout.swift */; };
@@ -41,6 +43,7 @@
 		B00007 /* FormAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormAnalysis.swift; sourceTree = "<group>"; };
 		B00008 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
 		B00009 /* WorkoutPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPlan.swift; sourceTree = "<group>"; };
+		B00009A /* WorkoutFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutFlow.swift; sourceTree = "<group>"; };
 		B00010 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
 		B00011 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
 		B00012 /* FormAnalysisResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormAnalysisResultView.swift; sourceTree = "<group>"; };
@@ -52,6 +55,7 @@
 		B00018 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		B00019 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		B00020 /* WorkoutPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPlanView.swift; sourceTree = "<group>"; };
+		B00020A /* WorkoutFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutFlowView.swift; sourceTree = "<group>"; };
 		B00021 /* SecurityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityManager.swift; sourceTree = "<group>"; };
 		B00022 /* LockedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedView.swift; sourceTree = "<group>"; };
 		B00023 /* SavedWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedWorkout.swift; sourceTree = "<group>"; };
@@ -108,6 +112,7 @@
 				B00007 /* FormAnalysis.swift */,
 				B00008 /* UserProfile.swift */,
 				B00009 /* WorkoutPlan.swift */,
+				B00009A /* WorkoutFlow.swift */,
 				B00023 /* SavedWorkout.swift */,
 			);
 			path = Models;
@@ -183,6 +188,7 @@
 			isa = PBXGroup;
 			children = (
 				B00020 /* WorkoutPlanView.swift */,
+				B00020A /* WorkoutFlowView.swift */,
 			);
 			path = Workout;
 			sourceTree = "<group>";
@@ -263,6 +269,7 @@
 				A00007 /* FormAnalysis.swift in Sources */,
 				A00008 /* UserProfile.swift in Sources */,
 				A00009 /* WorkoutPlan.swift in Sources */,
+				A00009A /* WorkoutFlow.swift in Sources */,
 				A00010 /* OpenAIService.swift in Sources */,
 				A00011 /* ColorExtension.swift in Sources */,
 				A00021 /* SecurityManager.swift in Sources */,
@@ -276,6 +283,7 @@
 				A00018 /* OnboardingView.swift in Sources */,
 				A00019 /* ProfileView.swift in Sources */,
 				A00020 /* WorkoutPlanView.swift in Sources */,
+				A00020A /* WorkoutFlowView.swift in Sources */,
 				A00022 /* LockedView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

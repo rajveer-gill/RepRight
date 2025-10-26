@@ -3,8 +3,25 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
     @EnvironmentObject var savedWorkoutsManager: SavedWorkoutsManager
+    @Binding var selectedTab: Int
     @State private var showWorkoutSelector = false
     @State private var selectedSavedWorkout: SavedWorkout?
+    @State private var showWorkoutFlow = false
+    @State private var currentTime = Date()
+    @State private var timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+    
+    // Computed property to get the current workout time (live update)
+    private var currentWorkoutTime: String {
+        if let startTime = appState.workoutStartTime {
+            let elapsed = Date().timeIntervalSince(startTime)
+            let minutes = Int(elapsed) / 60
+            let seconds = Int(elapsed) % 60
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+        // Format saved minutes as time
+        let minutes = appState.workoutMinutesToday
+        return "\(minutes):00"
+    }
     
     var body: some View {
         ScrollView {
@@ -30,14 +47,13 @@ struct HomeView: View {
                 
                 // Quick Stats
                 HStack(spacing: 12) {
-                    StatCard(icon: "flame.fill", title: "Streak", value: "7 days", color: .orange)
-                    StatCard(icon: "figure.walk", title: "Workouts", value: "24", color: .blue)
-                    StatCard(icon: "clock.fill", title: "Minutes", value: "540", color: .green)
+                    StatCard(icon: "flame.fill", title: "Streak", value: "\(appState.streakCount) days", color: .orange)
+                    StatCard(icon: "clock.fill", title: "Time", value: currentWorkoutTime, color: .green)
                 }
                 .padding(.horizontal, 24)
                 
                 // Today's Workout Card
-                if let workout = appState.currentWorkoutPlan?.workouts.first {
+                if let workout = appState.getCurrentWorkout() {
                     VStack(alignment: .leading, spacing: 16) {
                         // Plan Name Header
                         if !appState.currentPlanName.isEmpty {
@@ -77,8 +93,16 @@ struct HomeView: View {
                         }
                         .padding(.horizontal, 24)
                         
-                        WorkoutCard(workout: workout)
-                            .padding(.horizontal, 24)
+                        Button(action: {
+                            if !appState.completedWorkoutToday {
+                                showWorkoutFlow = true
+                            }
+                        }) {
+                            WorkoutCard(workout: workout, isCompleted: appState.completedWorkoutToday)
+                        }
+                        .padding(.horizontal, 24)
+                        .disabled(appState.completedWorkoutToday)
+                        .opacity(appState.completedWorkoutToday ? 0.5 : 1.0)
                     }
                 }
                 
@@ -94,21 +118,16 @@ struct HomeView: View {
                             icon: "sparkles",
                             title: "Generate New Plan",
                             subtitle: "AI-powered custom workout",
-                            gradient: [Color.blue, Color.purple]
+                            gradient: [Color.blue, Color.purple],
+                            action: { selectedTab = 1 }
                         )
                         
                         QuickActionButton(
                             icon: "video.fill",
                             title: "Check Your Form",
                             subtitle: "Upload or record video",
-                            gradient: [Color.purple, Color.pink]
-                        )
-                        
-                        QuickActionButton(
-                            icon: "chart.line.uptrend.xyaxis",
-                            title: "View Progress",
-                            subtitle: "Track your improvements",
-                            gradient: [Color.green, Color.blue]
+                            gradient: [Color.purple, Color.pink],
+                            action: { selectedTab = 2 }
                         )
                     }
                     .padding(.horizontal, 24)
@@ -129,6 +148,19 @@ struct HomeView: View {
                     showWorkoutSelector = false
                 }
             )
+        }
+        .fullScreenCover(isPresented: $showWorkoutFlow) {
+            WorkoutFlowView(isPresented: $showWorkoutFlow)
+        }
+        .alert("Your Streak Was Broken 💔", isPresented: $appState.isStreakBroken) {
+            Button("Get Back On Track", role: .cancel) {
+                appState.dismissStreakBrokenMessage()
+            }
+        } message: {
+            Text("Consistency is the key to reaching your fitness goals. Every day counts! Let's start fresh and build that streak again. You've got this! 💪")
+        }
+        .onReceive(timer) { _ in
+            currentTime = Date()
         }
     }
 }
@@ -168,11 +200,19 @@ struct StatCard: View {
 
 struct WorkoutCard: View {
     let workout: Workout
+    let isCompleted: Bool
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
+                    if isCompleted {
+                        Text("COMPLETED")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.green)
+                    }
+                    
                     Text(workout.day)
                         .font(.caption)
                         .foregroundColor(.blue)
@@ -181,13 +221,14 @@ struct WorkoutCard: View {
                     Text(workout.title)
                         .font(.title3.bold())
                         .foregroundColor(.white)
+                        .strikethrough(isCompleted)
                 }
                 
                 Spacer()
                 
-                Image(systemName: "play.circle.fill")
+                Image(systemName: isCompleted ? "checkmark.circle.fill" : "play.circle.fill")
                     .font(.system(size: 40))
-                    .foregroundColor(.blue)
+                    .foregroundColor(isCompleted ? .green : .blue)
             }
             
             HStack(spacing: 16) {
@@ -230,9 +271,10 @@ struct QuickActionButton: View {
     let title: String
     let subtitle: String
     let gradient: [Color]
+    let action: () -> Void
     
     var body: some View {
-        Button(action: {}) {
+        Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title2)
