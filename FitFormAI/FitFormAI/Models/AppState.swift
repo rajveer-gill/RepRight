@@ -204,8 +204,14 @@ class AppState: ObservableObject {
     
     func getCurrentWorkout() -> Workout? {
         guard let plan = currentWorkoutPlan else { return nil }
-        guard currentWorkoutDayIndex < plan.workouts.count else { return plan.workouts.first }
-        return plan.workouts[currentWorkoutDayIndex]
+        
+        // Use the actual day of the week to get today's workout
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        let dayIndex = (weekday - 1) % plan.workouts.count
+        
+        guard dayIndex < plan.workouts.count else { return plan.workouts.first }
+        return plan.workouts[dayIndex]
     }
     
     func saveExerciseProgress() {
