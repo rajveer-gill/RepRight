@@ -7,21 +7,6 @@ struct HomeView: View {
     @State private var showWorkoutSelector = false
     @State private var selectedSavedWorkout: SavedWorkout?
     @State private var showWorkoutFlow = false
-    @State private var currentTime = Date()
-    @State private var timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
-    
-    // Computed property to get the current workout time (live update)
-    private var currentWorkoutTime: String {
-        if let startTime = appState.workoutStartTime {
-            let elapsed = Date().timeIntervalSince(startTime)
-            let minutes = Int(elapsed) / 60
-            let seconds = Int(elapsed) % 60
-            return String(format: "%d:%02d", minutes, seconds)
-        }
-        // Format saved minutes as time
-        let minutes = appState.workoutMinutesToday
-        return "\(minutes):00"
-    }
     
     var body: some View {
         ScrollView {
@@ -46,11 +31,8 @@ struct HomeView: View {
                 .padding(.top, 60)
                 
                 // Quick Stats
-                HStack(spacing: 12) {
-                    StatCard(icon: "flame.fill", title: "Streak", value: "\(appState.streakCount) days", color: .orange)
-                    StatCard(icon: "clock.fill", title: "Time", value: currentWorkoutTime, color: .green)
-                }
-                .padding(.horizontal, 24)
+                StatCard(icon: "flame.fill", title: "Streak", value: "\(appState.streakCount) days", color: .orange)
+                    .padding(.horizontal, 24)
                 
                 // Today's Workout Card
                 if let workout = appState.getCurrentWorkout() {
@@ -158,9 +140,6 @@ struct HomeView: View {
             }
         } message: {
             Text("Consistency is the key to reaching your fitness goals. Every day counts! Let's start fresh and build that streak again. You've got this! 💪")
-        }
-        .onReceive(timer) { _ in
-            currentTime = Date()
         }
     }
 }

@@ -232,6 +232,12 @@ class AppState: ObservableObject {
         currentWorkoutPlan = nil
         UserDefaults.standard.removeObject(forKey: "currentWorkoutPlan")
     }
+    
+    func saveUserProfile() {
+        if let profile = userProfile, let encoded = try? JSONEncoder().encode(profile) {
+            UserDefaults.standard.set(encoded, forKey: "userProfile")
+        }
+    }
 }
 
 // Helper struct for exercise progress persistence

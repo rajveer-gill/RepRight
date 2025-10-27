@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
-    @State private var showSettings = false
+    @State private var showEditProfile = false
     
     var body: some View {
         ScrollView {
@@ -61,13 +61,9 @@ struct ProfileView: View {
                         .padding(.horizontal, 24)
                     
                     VStack(spacing: 0) {
-                        SettingsButton(icon: "person.fill", title: "Edit Profile", color: .blue) {}
-                        Divider().background(Color.white.opacity(0.1))
-                        
-                        SettingsButton(icon: "questionmark.circle.fill", title: "Help & Support", color: .green) {}
-                        Divider().background(Color.white.opacity(0.1))
-                        
-                        SettingsButton(icon: "info.circle.fill", title: "About", color: .blue) {}
+                        SettingsButton(icon: "person.fill", title: "Edit Profile", color: .blue) {
+                            showEditProfile = true
+                        }
                     }
                     .background(
                         RoundedRectangle(cornerRadius: 16)
@@ -99,6 +95,10 @@ struct ProfileView: View {
                 
                 Spacer(minLength: 100)
             }
+        }
+        .sheet(isPresented: $showEditProfile) {
+            EditProfileView()
+                .environmentObject(appState)
         }
     }
     
