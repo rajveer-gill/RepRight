@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var savedWorkoutsManager: SavedWorkoutsManager
     @State private var showEditProfile = false
     
     var body: some View {
@@ -108,10 +109,14 @@ struct ProfileView: View {
         appState.userProfile = nil
         appState.currentWorkoutPlan = nil
         
+        // Clear saved workouts
+        savedWorkoutsManager.deleteAllSavedWorkouts()
+        
         // Clear UserDefaults
         UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
         UserDefaults.standard.removeObject(forKey: "userProfile")
         UserDefaults.standard.removeObject(forKey: "currentWorkoutPlan")
+        UserDefaults.standard.removeObject(forKey: "SavedWorkouts")
     }
 }
 
