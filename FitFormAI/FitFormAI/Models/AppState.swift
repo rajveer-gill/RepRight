@@ -210,7 +210,7 @@ class AppState: ObservableObject {
         // We want: Sunday = 0, Monday = 1, ..., Saturday = 6
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: Date())
-        let dayIndex = (weekday % 7) % plan.workouts.count
+        let dayIndex = ((weekday - 1) % plan.workouts.count)
         
         guard dayIndex < plan.workouts.count else { return plan.workouts.first }
         return plan.workouts[dayIndex]
