@@ -38,19 +38,25 @@ class AppState: ObservableObject {
         Timer.scheduledTimer(withTimeInterval: timeUntilMidnight, repeats: false) { [weak self] _ in
             guard let self = self else { return }
             
-            // Check if user attempted workout and maintain/increment streak accordingly
-            if self.hasAttemptedWorkoutToday {
-                // User attempted workout - increment streak
-                self.streakCount += 1
-                self.lastWorkoutDate = Date()
-                self.checkNewDay()
-            } else {
-                // No attempt - break streak
-                if self.streakCount > 0 {
-                    self.isStreakBroken = true
-                    self.streakCount = 0
+            // Check if today is a scheduled workout day (only if plan has fewer than 7 workouts)
+            let isWorkoutDay = self.isTodayScheduledWorkoutDay()
+            
+            if isWorkoutDay {
+                // Check if user attempted workout on a scheduled workout day
+                if self.hasAttemptedWorkoutToday {
+                    // User attempted workout - increment streak
+                    self.streakCount += 1
+                    self.lastWorkoutDate = Date()
+                    self.checkNewDay()
+                } else {
+                    // No attempt on a workout day - break streak
+                    if self.streakCount > 0 {
+                        self.isStreakBroken = true
+                        self.streakCount = 0
+                    }
                 }
             }
+            // If not a workout day (rest day), don't change the streak at all
             
             // Reset for next day
             self.hasAttemptedWorkoutToday = false
@@ -245,6 +251,26 @@ class AppState: ObservableObject {
         if let profile = userProfile, let encoded = try? JSONEncoder().encode(profile) {
             UserDefaults.standard.set(encoded, forKey: "userProfile")
         }
+    }
+    
+    // Helper function to determine if today is a scheduled workout day
+    private func isTodayScheduledWorkoutDay() -> Bool {
+        guard let plan = currentWorkoutPlan else { return true } // Default to true if no plan
+        
+        // If plan has 7 workouts (daily plan), every day is a workout day
+        if plan.workouts.count == 7 {
+            return true
+        }
+        
+        // For limited plans (e.g., 3, 4, 5 days per week), only check on days with workouts
+        // Get today's workout
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        let dayIndex = weekday - 1
+        
+        // Check if we have a workout scheduled for today
+        // Since limited plans don't use day-of-week mapping, check if currentWorkoutDayIndex matches a workout day
+        return currentWorkoutDayIndex < plan.workouts.count
     }
 }
 
