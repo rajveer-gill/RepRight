@@ -12,8 +12,7 @@ class OpenAIService {
         self.apiKey = Config.getAPIKey()
         
         if apiKey.isEmpty || apiKey == "YOUR_OPENAI_API_KEY_HERE" {
-            print("⚠️ WARNING: OpenAI API key not found. Please add it to Config.swift")
-            print("📝 See SECURITY.md for setup instructions")
+            // API key validation happens at runtime
         }
     }
     
@@ -374,9 +373,6 @@ class OpenAIService {
         var restTime = data["restTime"] as? Int ?? 60
         if let restTimeInt = data["restTime"] as? Int {
             restTime = restTimeInt
-            print("✅ Exercise '\(name)' has rest time: \(restTime)s")
-        } else {
-            print("⚠️ Exercise '\(name)' missing restTime, defaulting to 60s")
         }
         
         let notes = data["notes"] as? String
@@ -527,15 +523,12 @@ class OpenAIService {
               let firstChoice = choices.first,
               let message = firstChoice["message"] as? [String: Any],
               let content = message["content"] as? String else {
-            print("❌ Failed to extract content from API response")
             throw APIError.invalidResponse
         }
         
         let jsonData = content.data(using: .utf8)
         guard let data = jsonData,
               let responseData = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            print("❌ Failed to parse JSON from AI response")
-            print("Content: \(content)")
             throw APIError.invalidResponse
         }
         
@@ -543,23 +536,13 @@ class OpenAIService {
         let warningMessage = responseData["warningMessage"] as? String
         let explanation = responseData["explanation"] as? String ?? "Customization processed"
         
-        print("✅ isHarmful: \(isHarmful)")
-        print("✅ hasModifiedPlan: \(responseData["modifiedPlan"] != nil)")
-        
         var modifiedPlan: WorkoutPlan? = nil
         if let planData = responseData["modifiedPlan"] as? [String: Any] {
             do {
-                print("📋 Attempting to parse modified plan...")
                 modifiedPlan = try parseWorkoutPlanFromDict(planData)
-                print("✅ Successfully parsed modified plan!")
-                print("📊 Plan has \(modifiedPlan?.workouts.count ?? 0) workouts")
-                print("📝 Plan title: \(modifiedPlan?.title ?? "nil")")
             } catch {
-                print("❌ Error parsing modified plan: \(error)")
-                print("Plan data keys: \(planData.keys)")
+                // Plan parsing failed
             }
-        } else {
-            print("⚠️ No modifiedPlan in response")
         }
         
         return CustomizationResponse(
@@ -575,27 +558,13 @@ class OpenAIService {
         let description = data["description"] as? String ?? ""
         let durationWeeks = data["durationWeeks"] as? Int ?? 4
         
-        print("🔍 Parsing workout plan from dict:")
-        print("   Title: \(title)")
-        print("   Description: \(description)")
-        print("   Duration: \(durationWeeks) weeks")
-        print("   Available keys in data: \(data.keys)")
-        
         var workouts: [Workout] = []
         if let workoutsData = data["workouts"] as? [[String: Any]] {
-            print("   Found \(workoutsData.count) workouts in data")
-            for (index, workoutData) in workoutsData.enumerated() {
-                print("   Parsing workout \(index + 1)...")
+            for workoutData in workoutsData {
                 let workout = try parseWorkout(workoutData)
-                print("   ✅ Workout \(index + 1): \(workout.day) - \(workout.title) (\(workout.exercises.count) exercises)")
                 workouts.append(workout)
             }
-        } else {
-            print("   ⚠️ No workouts array found in data!")
-            print("   Data contents: \(data)")
         }
-        
-        print("   Final plan has \(workouts.count) workouts")
         
         return WorkoutPlan(title: title, description: description, durationWeeks: durationWeeks, workouts: workouts)
     }

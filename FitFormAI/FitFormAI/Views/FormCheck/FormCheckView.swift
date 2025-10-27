@@ -188,7 +188,7 @@ struct FormCheckView: View {
                 await MainActor.run {
                     isLoadingPosition = false
                     // Handle error
-                    print("Error loading camera position: \(error)")
+                    // Error loading camera position
                 }
             }
         }
@@ -225,7 +225,7 @@ struct FormCheckView: View {
             } catch {
                 await MainActor.run {
                     isAnalyzing = false
-                    print("Error analyzing form: \(error)")
+                    // Error analyzing form
                 }
             }
         }

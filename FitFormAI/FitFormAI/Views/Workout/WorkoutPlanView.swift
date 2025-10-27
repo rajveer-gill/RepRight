@@ -588,14 +588,12 @@ struct WorkoutCustomizationView: View {
                             dismiss()
                         } else {
                             // Plan parsing failed, show explanation only
-                            print("Failed to parse modified plan, but AI provided explanation")
                         }
                     }
                 }
             } catch {
                 await MainActor.run {
                     isProcessing = false
-                    print("Error customizing plan: \(error.localizedDescription)")
                     // Show error to user
                     customizationResponse = CustomizationResponse(
                         isHarmful: false,

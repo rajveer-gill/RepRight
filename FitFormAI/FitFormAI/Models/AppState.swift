@@ -35,11 +35,8 @@ class AppState: ObservableObject {
         let startOfTomorrow = calendar.startOfDay(for: tomorrow)
         let timeUntilMidnight = startOfTomorrow.timeIntervalSince(now)
         
-        print("⏰ Timer set: Workout will reset at midnight (in \(Int(timeUntilMidnight / 60)) minutes)")
-        
         Timer.scheduledTimer(withTimeInterval: timeUntilMidnight, repeats: false) { [weak self] _ in
             guard let self = self else { return }
-            print("🔄 New day - checking workout status")
             
             // Check if user attempted workout and maintain/increment streak accordingly
             if self.hasAttemptedWorkoutToday {
@@ -47,13 +44,11 @@ class AppState: ObservableObject {
                 self.streakCount += 1
                 self.lastWorkoutDate = Date()
                 self.checkNewDay()
-                print("✅ Streak maintained - user attempted workout today")
             } else {
                 // No attempt - break streak
                 if self.streakCount > 0 {
                     self.isStreakBroken = true
                     self.streakCount = 0
-                    print("💔 Streak broken - no workout attempted")
                 }
             }
             
@@ -66,10 +61,8 @@ class AppState: ObservableObject {
             // Advance to the next day's workout
             if let plan = self.currentWorkoutPlan, self.currentWorkoutDayIndex < plan.workouts.count - 1 {
                 self.currentWorkoutDayIndex += 1
-                print("📅 Advanced to day \(self.currentWorkoutDayIndex + 1)")
             } else if let plan = self.currentWorkoutPlan {
                 self.currentWorkoutDayIndex = 0
-                print("📅 Looped back to day 1")
             }
             
             self.saveState()
