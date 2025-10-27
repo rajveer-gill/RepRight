@@ -200,6 +200,13 @@ class AppState: ObservableObject {
     
     func attemptWorkout() {
         hasAttemptedWorkoutToday = true
+        
+        // Increment streak immediately when user completes their first set
+        if !hasAttemptedWorkoutToday && isTodayScheduledWorkoutDay() {
+            streakCount += 1
+            lastWorkoutDate = Date()
+        }
+        
         saveState()
     }
     
