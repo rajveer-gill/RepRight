@@ -206,9 +206,11 @@ class AppState: ObservableObject {
         guard let plan = currentWorkoutPlan else { return nil }
         
         // Use the actual day of the week to get today's workout
+        // Calendar.weekday: Sunday = 1, Monday = 2, ..., Saturday = 7
+        // We want: Sunday = 0, Monday = 1, ..., Saturday = 6
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: Date())
-        let dayIndex = (weekday - 1) % plan.workouts.count
+        let dayIndex = (weekday % 7) % plan.workouts.count
         
         guard dayIndex < plan.workouts.count else { return plan.workouts.first }
         return plan.workouts[dayIndex]
