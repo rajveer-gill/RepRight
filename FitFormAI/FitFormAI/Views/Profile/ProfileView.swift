@@ -108,15 +108,35 @@ struct ProfileView: View {
         appState.hasCompletedOnboarding = false
         appState.userProfile = nil
         appState.currentWorkoutPlan = nil
+        appState.currentPlanName = ""
+        appState.currentWorkoutDayIndex = 0
+        appState.streakCount = 0
+        appState.workoutMinutesToday = 0
+        appState.lastWorkoutDate = nil
+        appState.completedWorkoutToday = false
+        appState.hasAttemptedWorkoutToday = false
+        appState.isStreakBroken = false
+        appState.exerciseSetProgress = [:]
+        appState.workoutStartTime = nil
         
         // Clear saved workouts
         savedWorkoutsManager.deleteAllSavedWorkouts()
         
-        // Clear UserDefaults
+        // Clear all UserDefaults keys
         UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
         UserDefaults.standard.removeObject(forKey: "userProfile")
         UserDefaults.standard.removeObject(forKey: "currentWorkoutPlan")
         UserDefaults.standard.removeObject(forKey: "SavedWorkouts")
+        UserDefaults.standard.removeObject(forKey: "currentPlanName")
+        UserDefaults.standard.removeObject(forKey: "currentWorkoutDayIndex")
+        UserDefaults.standard.removeObject(forKey: "streakCount")
+        UserDefaults.standard.removeObject(forKey: "workoutMinutesToday")
+        UserDefaults.standard.removeObject(forKey: "completedWorkoutToday")
+        UserDefaults.standard.removeObject(forKey: "hasAttemptedWorkoutToday")
+        UserDefaults.standard.removeObject(forKey: "isStreakBroken")
+        UserDefaults.standard.removeObject(forKey: "lastWorkoutDate")
+        UserDefaults.standard.removeObject(forKey: "exerciseSetProgress")
+        UserDefaults.standard.removeObject(forKey: "currentWorkoutStartTime")
     }
 }
 
