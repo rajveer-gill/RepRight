@@ -65,6 +65,7 @@ class AppState: ObservableObject {
             self.workoutMinutesToday = 0
             self.accumulatedWorkoutSecondsToday = 0
             self.workoutStartTime = nil // Clear workout start time for new day
+            self.exerciseSetProgress.removeAll()
             
             // Advance to the next day's workout
             if let plan = self.currentWorkoutPlan, self.currentWorkoutDayIndex < plan.workouts.count - 1 {
@@ -192,6 +193,7 @@ class AppState: ObservableObject {
         if let lastDate = lastWorkoutDate, !calendar.isDate(lastDate, inSameDayAs: today) {
             completedWorkoutToday = false
             hasAttemptedWorkoutToday = false
+            exerciseSetProgress.removeAll()
             
             // Streak break handling is managed elsewhere (midnight logic),
             // but if the app launches after a date change, ensure flags are consistent.
