@@ -113,6 +113,10 @@ struct WorkoutFlowView: View {
                 ongoingWorkoutStartTime = startTime
             }
         }
+        .onDisappear {
+            // Pauses total workout timer when leaving the workout flow
+            appState.pauseWorkoutTimer()
+        }
         .onChange(of: appState.currentWorkoutDayIndex) { newIndex in
             // Only reset when the workflow is already in a finished state
             // Don't interrupt if we're showing the completion screen
@@ -289,9 +293,11 @@ struct ExerciseSelectionView: View {
     }
     
     func formatWorkoutTime(_ startTime: Date) -> String {
+        // Combine accumulated paused time with current running session
         let elapsed = Date().timeIntervalSince(startTime)
-        let minutes = Int(elapsed) / 60
-        let seconds = Int(elapsed) % 60
+        let totalSeconds = appState.accumulatedWorkoutSecondsToday + Int(elapsed)
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
 }
@@ -371,6 +377,7 @@ struct ExerciseSelectionCard: View {
 // MARK: - Active Exercise View
 
 struct ActiveExerciseView: View {
+    @EnvironmentObject var appState: AppState
     let exercise: Exercise
     let currentSetNumber: Int
     let workoutStartTime: Date
@@ -439,7 +446,7 @@ struct ActiveExerciseView: View {
                                 Text("Total Time")
                                     .font(.caption)
                                     .foregroundColor(.white.opacity(0.7))
-                                Text(formatTime(elapsed: Date().timeIntervalSince(workoutStartTime)))
+                                Text(formattedTotalTime())
                                     .font(.system(size: 24, weight: .bold))
                                     .foregroundColor(.white)
                             }
@@ -493,7 +500,8 @@ struct ActiveExerciseView: View {
         .alert("End Workout?", isPresented: $showEndWorkoutConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("End Workout", role: .destructive) {
-                let minutes = Int(Date().timeIntervalSince(workoutStartTime) / 60)
+                let totalSeconds = appState.accumulatedWorkoutSecondsToday + Int(Date().timeIntervalSince(workoutStartTime))
+                let minutes = totalSeconds / 60
                 onComplete(completedSetsCount, minutes)
             }
         } message: {
@@ -587,6 +595,13 @@ struct ActiveExerciseView: View {
     func formatTime(elapsed: TimeInterval) -> String {
         let minutes = Int(elapsed) / 60
         let seconds = Int(elapsed) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    func formattedTotalTime() -> String {
+        let totalSeconds = appState.accumulatedWorkoutSecondsToday + Int(Date().timeIntervalSince(workoutStartTime))
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
     

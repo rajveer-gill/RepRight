@@ -9,6 +9,7 @@ class AppState: ObservableObject {
     @Published var currentWorkoutDayIndex: Int = 0 // Which day of the workout plan we're on
     @Published var streakCount: Int = 0 // User's workout streak
     @Published var workoutMinutesToday: Int = 0 // Minutes spent working out today
+    @Published var accumulatedWorkoutSecondsToday: Int = 0 // Paused time in seconds accumulated today
     @Published var lastWorkoutDate: Date? = nil // Last date a workout was completed
     @Published var completedWorkoutToday: Bool = false // If today's workout is completed
     @Published var hasAttemptedWorkoutToday: Bool = false // If user has attempted at least one set today
@@ -62,6 +63,7 @@ class AppState: ObservableObject {
             self.hasAttemptedWorkoutToday = false
             self.completedWorkoutToday = false
             self.workoutMinutesToday = 0
+            self.accumulatedWorkoutSecondsToday = 0
             self.workoutStartTime = nil // Clear workout start time for new day
             
             // Advance to the next day's workout
@@ -115,6 +117,7 @@ class AppState: ObservableObject {
         UserDefaults.standard.set(currentWorkoutDayIndex, forKey: "currentWorkoutDayIndex")
         UserDefaults.standard.set(streakCount, forKey: "streakCount")
         UserDefaults.standard.set(workoutMinutesToday, forKey: "workoutMinutesToday")
+        UserDefaults.standard.set(accumulatedWorkoutSecondsToday, forKey: "accumulatedWorkoutSecondsToday")
         UserDefaults.standard.set(completedWorkoutToday, forKey: "completedWorkoutToday")
         UserDefaults.standard.set(hasAttemptedWorkoutToday, forKey: "hasAttemptedWorkoutToday")
         UserDefaults.standard.set(isStreakBroken, forKey: "isStreakBroken")
@@ -146,6 +149,7 @@ class AppState: ObservableObject {
         currentWorkoutDayIndex = UserDefaults.standard.integer(forKey: "currentWorkoutDayIndex")
         streakCount = UserDefaults.standard.integer(forKey: "streakCount")
         workoutMinutesToday = UserDefaults.standard.integer(forKey: "workoutMinutesToday")
+        accumulatedWorkoutSecondsToday = UserDefaults.standard.integer(forKey: "accumulatedWorkoutSecondsToday")
         completedWorkoutToday = UserDefaults.standard.bool(forKey: "completedWorkoutToday")
         hasAttemptedWorkoutToday = UserDefaults.standard.bool(forKey: "hasAttemptedWorkoutToday")
         lastWorkoutDate = UserDefaults.standard.object(forKey: "lastWorkoutDate") as? Date
@@ -175,18 +179,22 @@ class AppState: ObservableObject {
         let calendar = Calendar.current
         let today = Date()
         
-        guard let lastDate = lastWorkoutDate else { return }
+        // Always ensure the session timer is scoped to the current day.
+        // If a persisted workout start time is from a previous day, clear it
+        // and reset the minutes accumulator so time does not carry over.
+        if let start = workoutStartTime, !calendar.isDate(start, inSameDayAs: today) {
+            workoutStartTime = nil
+            workoutMinutesToday = 0
+            accumulatedWorkoutSecondsToday = 0
+        }
         
-        // If last workout date is not today
-        if !calendar.isDate(lastDate, inSameDayAs: today) {
+        // If we have a last workout date saved and it's not today, clear daily flags
+        if let lastDate = lastWorkoutDate, !calendar.isDate(lastDate, inSameDayAs: today) {
             completedWorkoutToday = false
+            hasAttemptedWorkoutToday = false
             
-            // Check if streak should be broken
-            if streakCount > 0 {
-                isStreakBroken = true
-                streakCount = 0
-            }
-            
+            // Streak break handling is managed elsewhere (midnight logic),
+            // but if the app launches after a date change, ensure flags are consistent.
             saveState()
         }
     }
@@ -194,6 +202,7 @@ class AppState: ObservableObject {
     func completeWorkout(minutes: Int = 0) {
         completedWorkoutToday = true
         workoutMinutesToday = minutes
+        accumulatedWorkoutSecondsToday = minutes * 60
         // Note: Streak is incremented by timer when user attempts workout
         saveState()
     }
@@ -220,21 +229,32 @@ class AppState: ObservableObject {
         guard let plan = currentWorkoutPlan else { return nil }
         guard !plan.workouts.isEmpty else { return nil }
         
-        // Get the current day of week (1 = Sunday, 2 = Monday, ..., 7 = Saturday)
-        let calendar = Calendar.current
-        let weekday = calendar.component(.weekday, from: Date())
-        
-        // Convert to 0-based index (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-        let dayIndex = weekday - 1
-        
-        // If the plan has workouts for all 7 days, return the workout for today
+        // If the plan has workouts for all 7 days, choose the correct mapping
         if plan.workouts.count == 7 {
-            guard dayIndex < plan.workouts.count else { return plan.workouts.first }
-            return plan.workouts[dayIndex]
+            let index = computeTodayIndex(for: plan)
+            guard index < plan.workouts.count else { return plan.workouts.first }
+            return plan.workouts[index]
         }
         
         // Otherwise, return the first workout (which will be rotated by the midnight timer)
         return plan.workouts.first
+    }
+
+    // Determine today's index depending on whether the plan starts on Sunday or Monday
+    private func computeTodayIndex(for plan: WorkoutPlan) -> Int {
+        // Calendar.weekday: 1=Sunday ... 7=Saturday
+        let weekday = Calendar.current.component(.weekday, from: Date())
+        let sundayBasedIndex = weekday - 1 // 0..6 where 0=Sunday
+        
+        // Detect if plan is Monday-first by inspecting the first day's title/label
+        // Many AI plans start with Monday. If so, shift mapping so Monday=0
+        if let firstDay = plan.workouts.first?.day.lowercased(), firstDay.hasPrefix("mon") {
+            // Convert Sunday-based (0..6) to Monday-based (0..6 where 0=Mon)
+            // mondayIndex = (weekday + 5) % 7
+            return (weekday + 5) % 7
+        }
+        
+        return sundayBasedIndex
     }
     
     func saveExerciseProgress() {
@@ -248,6 +268,7 @@ class AppState: ObservableObject {
     func saveWorkoutMinutes() {
         // Save just the workout minutes
         UserDefaults.standard.set(workoutMinutesToday, forKey: "workoutMinutesToday")
+        UserDefaults.standard.set(accumulatedWorkoutSecondsToday, forKey: "accumulatedWorkoutSecondsToday")
     }
     
     func clearWorkoutPlan() {
@@ -258,6 +279,23 @@ class AppState: ObservableObject {
     func saveUserProfile() {
         if let profile = userProfile, let encoded = try? JSONEncoder().encode(profile) {
             UserDefaults.standard.set(encoded, forKey: "userProfile")
+        }
+    }
+    
+    // Pause/resume helpers for total workout timer
+    func pauseWorkoutTimer() {
+        guard let start = workoutStartTime else { return }
+        let elapsed = Int(Date().timeIntervalSince(start))
+        accumulatedWorkoutSecondsToday += max(0, elapsed)
+        workoutMinutesToday = accumulatedWorkoutSecondsToday / 60
+        workoutStartTime = nil
+        saveWorkoutMinutes()
+    }
+    
+    func resumeWorkoutTimerIfNeeded() {
+        // Only start a live session timer if not already running
+        if workoutStartTime == nil {
+            workoutStartTime = Date()
         }
     }
     

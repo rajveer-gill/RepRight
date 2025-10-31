@@ -44,6 +44,21 @@ struct FormCheckView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 60)
+            
+            // Back button to return to exercise list once user is in a guided/analysis state
+            if (cameraPosition != nil) || isAnalyzing || (analysisResult != nil) || showVideoRecorder || showVideoPicker {
+                HStack {
+                    Button(action: resetToExerciseSelection) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "chevron.left")
+                            Text("Back to Exercises")
+                        }
+                        .foregroundColor(.blue)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 24)
+            }
                 
                 // Exercise Selection
                 VStack(alignment: .leading, spacing: 12) {
@@ -169,6 +184,19 @@ struct FormCheckView: View {
         .sheet(isPresented: $showVideoPicker) {
             VideoPickerView(onVideoPicked: handleVideoRecorded)
         }
+    }
+    
+    private func resetToExerciseSelection() {
+        // Clear state related to an active form check session so user can pick another exercise
+        cameraPosition = nil
+        positionImage = nil
+        isLoadingPosition = false
+        isAnalyzing = false
+        analysisResult = nil
+        selectedVideo = nil
+        videoFrames = []
+        showVideoRecorder = false
+        showVideoPicker = false
     }
     
     private func loadCameraPosition() {
