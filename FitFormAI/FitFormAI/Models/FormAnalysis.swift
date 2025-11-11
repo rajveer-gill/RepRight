@@ -63,3 +63,15 @@ struct CameraPosition: Codable {
     }
 }
 
+extension CameraPosition {
+    var instructionLines: [String] {
+        let normalized = instructions.replacingOccurrences(of: #"(?<!^)(?=\d+\.)"#,
+                                                           with: "\n",
+                                                           options: .regularExpression)
+        return normalized
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+}
+

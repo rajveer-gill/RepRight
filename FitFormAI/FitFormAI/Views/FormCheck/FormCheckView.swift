@@ -15,6 +15,8 @@ struct FormCheckView: View {
     @State private var analysisResult: FormAnalysis?
     @State private var selectedVideo: URL?
     @State private var videoFrames: [UIImage] = []
+    @State private var errorMessage: String?
+    @State private var showErrorAlert = false
     
     let commonExercises = [
         "Squat", "Deadlift", "Bench Press", "Overhead Press",
@@ -184,6 +186,11 @@ struct FormCheckView: View {
         .sheet(isPresented: $showVideoPicker) {
             VideoPickerView(onVideoPicked: handleVideoRecorded)
         }
+        .alert("Something went wrong", isPresented: $showErrorAlert, actions: {
+            Button("OK", role: .cancel) { }
+        }, message: {
+            Text(errorMessage ?? "Please try again.")
+        })
     }
     
     private func resetToExerciseSelection() {
@@ -215,8 +222,7 @@ struct FormCheckView: View {
             } catch {
                 await MainActor.run {
                     isLoadingPosition = false
-                    // Handle error
-                    // Error loading camera position
+                    presentError("We couldn't load camera setup guidance. Please check your connection and try again.")
                 }
             }
         }
@@ -229,6 +235,12 @@ struct FormCheckView: View {
         extractFrames(from: videoURL) { frames in
             videoFrames = frames
             selectedVideo = videoURL
+            
+            if frames.isEmpty {
+                presentError("The video was too short for analysis. Try recording at least 3–5 seconds of movement.")
+                return
+            }
+            
             analyzeForm()
         }
     }
@@ -253,7 +265,7 @@ struct FormCheckView: View {
             } catch {
                 await MainActor.run {
                     isAnalyzing = false
-                    // Error analyzing form
+                    presentError("We weren't able to analyze that clip. Please try again or record a new video.")
                 }
             }
         }
@@ -284,6 +296,11 @@ struct FormCheckView: View {
             }
         }
     }
+    
+    private func presentError(_ message: String) {
+        errorMessage = message
+        showErrorAlert = true
+    }
 }
 
 struct CameraSetupCard: View {
@@ -295,12 +312,16 @@ struct CameraSetupCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Camera Setup Guide")
+            Text("Form Guidance")
                 .font(.title2.bold())
                 .foregroundColor(.white)
             
             // Position Image
             if let image = positionImage {
+                Text("\(exerciseName) Reference")
+                    .font(.headline)
+                    .foregroundColor(.white.opacity(0.75))
+                
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -340,15 +361,19 @@ struct CameraSetupCard: View {
             }
             
             // Instructions
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Setup Instructions")
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Camera Setup Instructions")
                     .font(.headline)
                     .foregroundColor(.white)
                 
-                Text(position.instructions)
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.8))
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(position.instructionLines, id: \.self) { line in
+                        Text(line)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.85))
+                            .lineSpacing(6)
+                    }
+                }
             }
             .padding()
             .background(

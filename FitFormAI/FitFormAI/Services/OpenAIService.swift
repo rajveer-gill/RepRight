@@ -51,8 +51,8 @@ class OpenAIService {
             "angle": "Front View" | "Side View" | "Back View" | "45° Diagonal" | "Overhead View",
             "distance": "distance description",
             "height": "height description",
-            "instructions": "clear, step-by-step setup instructions",
-            "visualGuidePrompt": "a detailed prompt for generating an illustration showing camera placement"
+            "instructions": "clear, step-by-step setup instructions with each numbered step on its own line using newline characters (e.g., \"1. ...\\n2. ...\")",
+            "visualGuidePrompt": "a concise description (max 35 words) that highlights the athlete's starting position, body alignment, and key cues for performing the exercise correctly."
         }
         """
         
@@ -74,17 +74,18 @@ class OpenAIService {
     
     func generateCameraPositionImage(for position: CameraPosition, exerciseName: String) async throws -> UIImage {
         let enhancedPrompt = """
-        Create a clean, professional diagram showing camera setup for filming the exercise "\(exerciseName)".
+        Create a clean, minimalist illustration showcasing an athlete performing "\(exerciseName)" with correct form.
         
-        Style: Minimalist technical illustration with:
-        - A simple stick figure or silhouette performing the exercise
-        - A camera icon positioned at: \(position.angle), \(position.height), \(position.distance)
-        - Dotted lines showing the camera's field of view
-        - Clear labels and measurements
-        - Modern, professional design with a white or light gradient background
-        - Blue and black color scheme
+        Requirements:
+        - Use a single human silhouette or simplified figure demonstrating the movement
+        - Highlight key body alignment cues (e.g., back straight, elbow position) using subtle arrows or minimal labels
+        - Focus solely on the athlete and exercise motion—do not include cameras or extra equipment unless required by the exercise
+        - Keep the background plain or subtle gradient with ample negative space
+        - Avoid decorative scenery or clutter
+        - Use a limited color palette (navy, blue, white, gray) with smooth gradients
         
-        The illustration should clearly show: \(position.instructions)
+        Emphasize clarity of the movement and correct posture. The athlete should clearly demonstrate \(exerciseName).
+        Additional context: \(position.visualGuidePrompt)
         """
         
         let requestBody: [String: Any] = [

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct OnboardingView: View {
     @EnvironmentObject var appState: AppState
@@ -112,6 +113,8 @@ struct OnboardingView: View {
     }
     
     private func handleNext() {
+        dismissKeyboard()
+        
         if currentStep < 6 {
             withAnimation {
                 currentStep += 1
@@ -119,6 +122,10 @@ struct OnboardingView: View {
         } else {
             completeOnboarding()
         }
+    }
+    
+    private func dismissKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
     
     private func completeOnboarding() {

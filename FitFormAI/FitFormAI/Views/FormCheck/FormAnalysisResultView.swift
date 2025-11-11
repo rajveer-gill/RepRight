@@ -62,38 +62,6 @@ struct FormAnalysisResultView: View {
                 }
             }
             
-            // Action Buttons
-            HStack(spacing: 12) {
-                Button(action: {}) {
-                    HStack {
-                        Image(systemName: "arrow.clockwise")
-                        Text("Analyze Again")
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(12)
-                }
-                
-                Button(action: {}) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("Share")
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [.purple, .pink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(12)
-                }
-            }
         }
     }
 }
